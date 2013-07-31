@@ -1,7 +1,7 @@
 // File: MyOracleConnection.java
 
 
-//change it again
+//change it again //test from jingyi
 
 
 import java.sql.*; 

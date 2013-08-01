@@ -14,8 +14,7 @@ import java.sql.*;
  * JDBC driver has been loaded. To obtain a reference to an
  * instance of this class, use the getInstance() method.
  */ 
-public class MyOracleConnection
-{
+public class MyOracleConnection {
     private static MyOracleConnection _moc = null;
     protected Connection con = null;
     protected boolean driverLoaded = false;
@@ -25,8 +24,7 @@ public class MyOracleConnection
      * The constructor is declared protected so that only subclasses
      * can access it.
      */ 
-    protected MyOracleConnection()
-    {
+    protected MyOracleConnection() {
 	// empty
     }
 
@@ -34,14 +32,12 @@ public class MyOracleConnection
     /*
      * Returns an instance of MvbOracleConnection
      */ 
-    public static MyOracleConnection getInstance()
-    {
-	if (_moc == null)
-	{
-	    _moc = new MyOracleConnection(); 
-	}
+    public static MyOracleConnection getInstance() {
+    	if (_moc == null) {
+    		_moc = new MyOracleConnection(); 
+    	}
 
-	return _moc;
+    	return _moc;
     }
 
 
@@ -50,56 +46,48 @@ public class MyOracleConnection
      * the given username and password.
      * Returns true if the connection is successful; false otherwise.
      */ 
-    public boolean connect(String username, String password)
-    {
-	try
-	{
-	    // change the url if the branch table is located somewhere else
-	    String url = "jdbc:oracle:thin:@dbhost.ugrad.cs.ubc.ca:1522:ug";
+    public boolean connect(String username, String password) {
+    	try{
+    		// change the url if the branch table is located somewhere else
+    		String url = "jdbc:oracle:thin:@dbhost.ugrad.cs.ubc.ca:1522:ug";
 
-	    if (!driverLoaded)
-	    {
-		DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
-		driverLoaded = true; 
-	    }
+    		if (!driverLoaded) {
+    			DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
+    			driverLoaded = true; 
+    		}
  
-	    con = DriverManager.getConnection(url, username, password);
+    		con = DriverManager.getConnection(url, username, password);
 
-	    con.setAutoCommit(false);
+    		con.setAutoCommit(false);
 
-	    return true; 
-	}
-	catch (SQLException ex)
-	{
-	    return false; 
-	}
+    		return true; 
+    	} catch (SQLException ex) {
+    		return false; 
+    	}
     }
 
 
     /*
      * Returns the connection
      */
-    public Connection getConnection()
-    {
-	return con; 
+    public Connection getConnection() {
+    	return con; 
     }
 
 
     /*
      * Sets the connection
      */
-    public void setConnection(Connection connect)
-    {
-	con = connect; 
+    public void setConnection(Connection connect) {
+    	con = connect; 
     }
 
 
     /*
      * Returns true if the driver is loaded; false otherwise
      */ 
-    public boolean isDriverLoaded()
-    {
-	return driverLoaded; 
+    public boolean isDriverLoaded() {
+    	return driverLoaded; 
     }
 
 
@@ -107,14 +95,13 @@ public class MyOracleConnection
      * This method allows members of this class to clean up after itself 
      * before it is garbage collected. It is called by the garbage collector.
      */ 
-    protected void finalize() throws Throwable
-    {		
-	if (con != null)
-	{
-	    con.close();
-	}
+    protected void finalize() throws Throwable {		
+    	if (con != null) {
+    		con.close();
+    	}
 
-	// finalize() must call super.finalize() as the last thing it does
-	super.finalize();	
+    	// finalize() must call super.finalize() as the last thing it does
+    	super.finalize();	
     }
+    
 }

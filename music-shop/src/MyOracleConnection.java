@@ -16,7 +16,7 @@ import java.sql.*;
  */ 
 public class MyOracleConnection
 {
-    private static MyOracleConnection _mvb = null;
+    private static MyOracleConnection _moc = null;
     protected Connection con = null;
     protected boolean driverLoaded = false;
 
@@ -36,12 +36,12 @@ public class MyOracleConnection
      */ 
     public static MyOracleConnection getInstance()
     {
-	if (_mvb == null)
+	if (_moc == null)
 	{
-	    _mvb = new MyOracleConnection(); 
+	    _moc = new MyOracleConnection(); 
 	}
 
-	return _mvb;
+	return _moc;
     }
 
 

@@ -1,4 +1,4 @@
 music-shop
 ==========
 
-A course project for cs304.
+A course project.

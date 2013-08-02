@@ -1,4 +1,5 @@
-// File: MyOracleConnection.java
+// This code is adapted from the optional swing tutorial given by the instructor.
+// And we made some modifications on it.
 
 
 //change it again //test from jingyi
@@ -92,7 +93,7 @@ public class MyOracleConnection {
 
 
     /*
-     * This method allows members of this class to clean up after itself 
+     * This method allows members of this class to clean up after itself and
      * before it is garbage collected. It is called by the garbage collector.
      */ 
     protected void finalize() throws Throwable {		

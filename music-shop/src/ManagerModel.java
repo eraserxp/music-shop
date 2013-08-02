@@ -4,18 +4,20 @@ import javax.swing.event.EventListenerList;
 
 
 
-/* provides methods to carry out the actual transactions performed by a clerk:
+/* provides methods to carry out the actual transactions performed by a manager:
  * 
- * 1. process a purchase of items in the store
- * 2. process a return of an item for refund
+ * 1. add items to store
+ * 2. set the delivery date for an order
+ * 3. generate daily sale report
+ * 4. show the top selling items
  * 
  * This class provides interface for the database operations (like insert, update 
  * tables..) that are related to the above transactions. It doesn't know anything
- * about the user interface. A ClerkController class will act as a glue between the
- * GUI and ClerkModel
+ * about the user interface. A ManagerController class will act as a glue between the
+ * GUI and ManagerModel
  */
 
-public class ClerkModel {
+public class ManagerModel {
 	
 	protected PreparedStatement ps = null;
 	protected EventListenerList listenerList = new EventListenerList();
@@ -27,22 +29,30 @@ public class ClerkModel {
 	 * Precondition: The Connection object in MvbOracleConnection must be
 	 * a valid database connection.
 	 */ 
-	public ClerkModel()
+	public ManagerModel()
 	{
 		con = MyOracleConnection.getInstance().getConnection();
 	}
 
-	
-	public boolean processPurchase(int receiptId) {
+	public boolean addItemToStore() {
 		return false;
 		
 	}
 	
-	public boolean processReturn(int receiptId, int upc, int quantity) {
+	public boolean setDeliveryDate() {
 		return false;
 		
 	}
 	
+	public boolean generateDailyReport() {
+		return false;
+		
+	}
+	
+	public boolean showTopSellingItems() {
+		return false;
+		
+	}
 	
 	/******************************************************************************
 	 * Below are the methods to add and remove ExceptionListeners.

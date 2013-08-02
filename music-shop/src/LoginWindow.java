@@ -17,8 +17,8 @@ public class LoginWindow extends JDialog implements ActionListener
 	private int loginAttempts = 0;
 
 	// components of the login window
-	private JTextField usernameField = new JTextField(10);
-	private JPasswordField passwordField = new JPasswordField(10);	   
+	private JTextField usernameField = new JTextField(15);
+	private JPasswordField passwordField = new JPasswordField(15);	   
 	private JLabel usernameLabel = new JLabel("Username:  ");
 	private JLabel passwordLabel = new JLabel("Password:  ");
 	private JButton loginButton = new JButton("Log In");
@@ -55,8 +55,8 @@ public class LoginWindow extends JDialog implements ActionListener
 
 		// place the username label 
 		
-	    /*gridwidth --- number of columns in its display area
-	     * 
+		/* gridwidth --- number of columns in its display area
+		 * 
 		 *GridBagConstraints.RELATIVE --- place this component just to the right
 		 *                                or to the below of the last component added
 		 */ 

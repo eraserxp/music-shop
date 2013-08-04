@@ -6,6 +6,7 @@ import javax.swing.border.*;
 
 
 import java.sql.*;
+import java.util.ArrayList;
 
 
 /*
@@ -35,28 +36,114 @@ public class ClerkController implements ActionListener, ExceptionListener {
 	 *
 	 */
 	class ProcessPurchaseDialog extends JDialog implements ActionListener {
-
-		private JTextField branchID = new JTextField(4);
-		private JTextField branchName = new JTextField(10);		
+		// to save the item upc list 
+		private ArrayList<JTextField> itemUPCList = new ArrayList<JTextField>();
+		private JTextField itemUPC = new JTextField(4);
+		private ArrayList<JTextField> quantityList = new ArrayList<JTextField>();
+		private JTextField quantity = new JTextField(4);
+		
 		
 		public ProcessPurchaseDialog(ShopGUI shopGUI) {
 			//TODO
 			super(shopGUI, "Process purchase", true);
-			setResizable(false);
+			//setResizable(false);
 
 			JPanel contentPane = new JPanel(new BorderLayout());
 			setContentPane(contentPane);
 			contentPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-			JPanel inputPane = dialogHelper.createInputPane("Purchase fields");
+			final JPanel inputPanel = dialogHelper.createInputPane("Purchase fields");
 			
-			dialogHelper.addComponentToDialog(inputPane, "Branch ID", branchID);
-			dialogHelper.addComponentToDialog(inputPane, "Branch name", branchName);
+			dialogHelper.addComponentsToPanel(inputPanel, "Item UPC", itemUPC,
+					                           "Quantity", quantity);
+			itemUPCList.add(itemUPC);
+			quantityList.add(quantity);
 			
-			JButton OKButton = new JButton("OK");
+			//dialogHelper.addComponentsToDialog(inputPane, "Branch name", branchName);
+			
+			
+			JPanel addMorePanel = new JPanel(new BorderLayout());
+			//JPanel generateReceiptPanel = new JPanel(new BorderLayout());
+			JButton  btnAdd = new JButton("Add more item");
+			btnAdd.addActionListener(new ActionListener(){
+
+				@Override
+				public void actionPerformed(ActionEvent e)
+				{
+					itemUPC = new JTextField(4);
+					itemUPCList.add(itemUPC);
+					quantity = new JTextField(4);
+					quantityList.add(quantity);
+					dialogHelper.addComponentsToPanel(inputPanel, "Item UPC", itemUPC,
+	                           "Quantity", quantity);
+					pack();
+				}
+
+			});
+			
+			addMorePanel.add(btnAdd);
+			
+			// create the panel to output the receipt
+			final JPanel receiptPanel = new JPanel(new BorderLayout());
+			receiptPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 30, 10));
+			
+			JButton receiptButton = new JButton("Generate/Update receipt");
 			JButton cancelButton = new JButton("Cancel");
-			OKButton.addActionListener(this);
-			OKButton.setActionCommand("OK");
+			receiptButton.addActionListener(this);
+			receiptButton.addActionListener(new ActionListener(){
+
+				@Override
+				public void actionPerformed(ActionEvent e)
+				{
+					receiptPanel.removeAll();
+					int itemUPC;
+					String title;
+					//ArrayList<Integer> quantities = new ArrayList<Integer>();
+					int quantity = 1;
+					
+					int totalQuantity = 0;
+					double unitPrice = 1.0;
+					double subtotal = 0.0; 
+					//ArrayList<Double> subtotalList = new ArrayList<Double>();
+					double totalAmount = 0.0;
+
+					dialogHelper.addComponentsToPanel(receiptPanel, "UPC", "Title", 
+							           "quantity", "unit Price", "subtotal");
+					
+					// show upc, title, quantity, unit price and subtotal for each item
+					for (int i=0; i<itemUPCList.size(); ++i) {
+						String upc;
+						// process the text field only if its input is not empty
+						if (itemUPCList.get(i).getText().trim().length() != 0
+							&& quantityList.get(i).getText().trim().length() !=0 ) {
+
+							upc = itemUPCList.get(i).getText().trim();
+							itemUPC = Integer.parseInt(upc);
+							title = clerkModel.queryTitle(itemUPC);
+							quantity=Integer.parseInt(quantityList.get(i).getText().trim());
+							if (quantity != 0) {
+								unitPrice = clerkModel.queryItemPrice(itemUPC);
+								subtotal = quantity*unitPrice;
+								totalAmount += subtotal;
+								totalQuantity += quantity;
+								dialogHelper.addComponentsToPanel(receiptPanel, upc, title, 
+										String.valueOf(quantity), String.valueOf(unitPrice), 
+										String.valueOf(subtotal) );
+							}
+						}
+					
+					}
+					
+					// add the summary for the purchase
+					dialogHelper.addComponentsToPanel(receiptPanel, "SUMMARY", "  ", 
+					           "total quantity: " + totalQuantity, "    ", 
+					           "total amount: " + totalAmount);
+					
+					pack();
+				}
+
+			});
+			//generateReceiptButton.setActionCommand("OK");
 			cancelButton.addActionListener(new ActionListener()
 			{
 				public void actionPerformed(ActionEvent e)
@@ -65,10 +152,17 @@ public class ClerkController implements ActionListener, ExceptionListener {
 				}
 			});
 			
-			dialogHelper.addOKandCancelButtons(inputPane, OKButton, cancelButton);
+			// panel for the OK and cancel buttons
+			JPanel buttonPanel = new JPanel();
+			buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
+			buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 2));
+			dialogHelper.addComponentsToPanel(buttonPanel, receiptButton, cancelButton);
 			
-			contentPane.add(inputPane, BorderLayout.CENTER);
-
+			contentPane.add(inputPanel, BorderLayout.CENTER);
+			contentPane.add(addMorePanel, BorderLayout.NORTH);
+			contentPane.add(buttonPanel, BorderLayout.SOUTH);
+			contentPane.add(receiptPanel, BorderLayout.EAST);
+			
 			addWindowListener(new WindowAdapter() 
 			{
 				public void windowClosing(WindowEvent e)

@@ -1,14 +1,4 @@
-/CustomerController$AddItemDialog.class
-/CustomerController$CheckOutDialog.class
-/CustomerController$RegistrationDialog.class
-/CustomerController$RemoveItemDialog.class
-/CustomerController$SearchItemDialog.class
-/CustomerController$AddItemToCartDialog.class
-/ManagerController$AddItemToStoreDialog.class
-/ManagerController$ShowTopSellingItemsDialog.class
+/ClerkController$ProcessPurchaseDialog$3.class
 /ClerkController$ProcessPurchaseDialog$1.class
-/DialogFactory
-/DialogFactory.class
-/AddComponentToDialog.class
-/DialogHelper.class
 /ClerkController$ProcessPurchaseDialog$2.class
+/ClerkController$ProcessPurchaseDialog$4.class

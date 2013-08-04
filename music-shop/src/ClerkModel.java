@@ -43,6 +43,14 @@ public class ClerkModel {
 		
 	}
 	
+	public String queryTitle(int itemUPC) {
+		return "title";
+	}
+	
+	// obtain the unit price given the UPC of the item
+	public float queryItemPrice(int itemUPC) {
+		return 0;
+	}
 	
 	/******************************************************************************
 	 * Below are the methods to add and remove ExceptionListeners.

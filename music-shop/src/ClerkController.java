@@ -70,7 +70,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			
 			// an inner class to listen for the changes in the text field and 
 			// update the receipt
-			class UpdateReceipt implements FocusListener, ActionListener{
+			class UpdateReceipt implements ActionListener { //FocusListener, ActionListener{
 				// constructor
 				public UpdateReceipt() {
 					//empty ;
@@ -94,26 +94,45 @@ public class ClerkController implements ActionListener, ExceptionListener {
 						String upcString;
 						// process this row only if the corresponding removeItem is not selected
 						if (!checkBoxList.get(i).isSelected()) {
+							
 							// process the text field only if its input is not empty
-							if (upcFieldList.get(i).getText().trim().length() != 0
-								&& quantityFieldList.get(i).getText().trim().length() !=0 ) {
+							if (upcFieldList.get(i).getText().trim().length() != 0 ) {
+								//&& quantityFieldList.get(i).getText().trim().length() !=0 ) {
 
 								upcString = upcFieldList.get(i).getText().trim();
 								upcInt = Integer.parseInt(upcString);
 								title = clerkModel.queryTitle(upcInt);
-								quantity=Integer.parseInt(quantityFieldList.get(i).getText().trim());
-								// if one item has 0 quantity, we should ignore it
-								if (quantity != 0) {							
-									unitPrice = clerkModel.queryItemPrice(upcInt);
-									subtotal = quantity*unitPrice;
-									totalAmount += subtotal;
-									totalQuantity += quantity;
-									String fieldValues[] = {upcString, title, 
-											String.valueOf(quantity),
-											String.valueOf(unitPrice),
-											String.valueOf(subtotal)};
-									dialogHelper.addOneRowToPanel(receiptPanel, fieldValues);
-								}
+								//
+								// check for the validity of user input
+								if (!validateItemUPC(upcInt)) {//upc not valid
+									String message = "Invalid UPC:"+ upcString + " !";
+									popUpErrorMessage(message);
+									upcFieldList.get(i).setText("");
+									quantityFieldList.get(i).setText("");
+								} else if ( validateItemUPC(upcInt) 
+										   && quantityFieldList.get(i).getText().trim().length() !=0) {
+									// if upc is valid and quantity field is not empty
+									quantity=Integer.parseInt(quantityFieldList.get(i).getText().trim());
+									if (!validateInputQuantity(upcInt, quantity)) { 
+										// if quantity is not valid
+										String message = "Invalid quantity: "+ quantity + "! " 
+												+ "It should be in range from 1 to " 
+												+ clerkModel.queryItemQuantity(upcInt);
+										popUpErrorMessage(message);
+										quantityFieldList.get(i).setText("");
+									} else { 
+										// update the receipt only if both upc and quantity are valid
+										unitPrice = clerkModel.queryItemPrice(upcInt);
+										subtotal = quantity*unitPrice;
+										totalAmount += subtotal;
+										totalQuantity += quantity;
+										String fieldValues[] = {upcString, title, 
+												String.valueOf(quantity),
+												String.valueOf(unitPrice),
+												String.valueOf(subtotal)};
+										dialogHelper.addOneRowToPanel(receiptPanel, fieldValues);
+									}
+								} 
 							}
 						}
 					} // end of for loop
@@ -134,16 +153,16 @@ public class ClerkController implements ActionListener, ExceptionListener {
 					pack(); 
 				}
 				
-				@Override
-				public void focusGained(FocusEvent e) {
-					//empty
-				}
+//				@Override
+//				public void focusGained(FocusEvent e) {
+//					//empty
+//				}
 				
-				// Invoked when a component loses the keyboard focus.
-				@Override
-				public void focusLost(FocusEvent e) {
-					regenerateReceipt();
-				}
+//				// Invoked when a component loses the keyboard focus.
+//				@Override
+//				public void focusLost(FocusEvent e) {
+//					regenerateReceipt();
+//				}
 
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
@@ -198,8 +217,8 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			upcField.addActionListener(updateReceipt);
 			quantityField.addActionListener(updateReceipt);
 			
-			upcField.addFocusListener(updateReceipt);
-			quantityField.addFocusListener(updateReceipt);
+//			upcField.addFocusListener(updateReceipt);
+//			quantityField.addFocusListener(updateReceipt);
 			
 			removeItem.addItemListener(removeItemListener);
 			
@@ -222,8 +241,8 @@ public class ClerkController implements ActionListener, ExceptionListener {
 					// register itemUPC and quantity field to update the receipt
 					upcField.addActionListener(updateReceipt);
 					quantityField.addActionListener(updateReceipt);					
-					upcField.addFocusListener(updateReceipt);
-					quantityField.addFocusListener(updateReceipt);
+//					upcField.addFocusListener(updateReceipt);
+//					quantityField.addFocusListener(updateReceipt);
 					removeItem.addItemListener(removeItemListener);
 					// add itemUPC and quantity text fields as a row
 					dialogHelper.addComponentsToPanel(inputPanel, "Item UPC", upcField,
@@ -306,8 +325,10 @@ public class ClerkController implements ActionListener, ExceptionListener {
 		}
 		
 		private boolean validateInputQuantity(int upc, int quantity) {
-			return clerkModel.queryItemQuantity(upc) >= quantity;
+			return clerkModel.queryItemQuantity(upc) >= quantity &&
+					quantity >=1;
 		}
+		
 		
 		// set the markers for a list of text fields so that you can
 		// remove or update them later
@@ -316,6 +337,13 @@ public class ClerkController implements ActionListener, ExceptionListener {
 				fields.get(i).setActionCommand(prefix + Integer.toString(i));
 			}
 		} // end of setMarkersForFields
+		
+		private void popUpErrorMessage(String message) {
+			Toolkit.getDefaultToolkit().beep();
+			// display a popup to inform the user of the validation error
+			JOptionPane errorPopup = new JOptionPane();
+			errorPopup.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+		}
 		
 	}
 	

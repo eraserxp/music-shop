@@ -81,10 +81,10 @@ public class ClerkController implements ActionListener, ExceptionListener {
 					double unitPrice = 1.0;
 					double subtotal = 0.0; 
 					double totalAmount = 0.0;
-
-					dialogHelper.addComponentsToPanel(receiptPanel, "UPC", "Title", 
-							           "quantity", "unit Price", "subtotal");
+					String fieldNames[] = {"UPC", "Title", "quantity", "unit Price", 
+							               "subtotal"};
 					
+					dialogHelper.addOneRowToPanel(receiptPanel, fieldNames);
 					// show upc, title, quantity, unit price and subtotal for each item
 					for (int i=0; i<itemUPCList.size(); ++i) {
 						String upc;
@@ -97,26 +97,34 @@ public class ClerkController implements ActionListener, ExceptionListener {
 							title = clerkModel.queryTitle(itemUPC);
 							quantity=Integer.parseInt(quantityList.get(i).getText().trim());
 							if (quantity != 0) {
+								
 								unitPrice = clerkModel.queryItemPrice(itemUPC);
 								subtotal = quantity*unitPrice;
 								totalAmount += subtotal;
 								totalQuantity += quantity;
-								dialogHelper.addComponentsToPanel(receiptPanel, upc, title, 
-										String.valueOf(quantity), String.valueOf(unitPrice), 
-										String.valueOf(subtotal) );
+								String fieldValues[] = {upc, title, 
+										                 String.valueOf(quantity),
+										                 String.valueOf(unitPrice),
+										                 String.valueOf(subtotal)};
+								dialogHelper.addOneRowToPanel(receiptPanel, fieldValues);
 							}
 						}
 					
 					}
+					
 					// add a blank line
-					dialogHelper.addComponentsToPanel(receiptPanel, "  ", "  ", 
-					           "  " , "    ", 
-					           "  ");	
+					String blanks[] = {"  ",  "  ",  "  ",  "   ",  " " }; 
+					dialogHelper.addOneRowToPanel(receiptPanel, blanks);
 					
 					// add the summary for the purchase
-					dialogHelper.addComponentsToPanel(receiptPanel, "SUMMARY", "  ", 
-					           "total quantity: " + totalQuantity, "    ", 
-					           "total amount: " + totalAmount);					
+					String summary[] = {
+							   "SUMMARY", 
+							    "  ", 
+					           "total quantity: " + totalQuantity, 
+					           "    ", 
+					           "total amount: " + totalAmount
+					           }; 
+					dialogHelper.addOneRowToPanel(receiptPanel, summary);				
 					pack();
 				}
 				

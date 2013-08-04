@@ -2,6 +2,7 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -29,16 +30,16 @@ import javax.swing.border.TitledBorder;
 public class DialogHelper {
 	private GridBagLayout gb = null;
 	private GridBagConstraints c = null;
-	int row; 
-	int row2;
+	int rowCount1; 
+	int rowCount2;
 
 
 	public DialogHelper() {
 		//empty
 		gb = new GridBagLayout();
 		c = new GridBagConstraints();
-		row = 0;
-		row2 = 0;
+		rowCount1 = 0;
+		rowCount2 = 0;
 	}
 	
 
@@ -83,7 +84,7 @@ public class DialogHelper {
 		JLabel jLabel1= new JLabel(itemUPC1 + ": ", SwingConstants.RIGHT);	    
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridx = 0;
-		c.gridy = row;
+		c.gridy = rowCount1;
 		c.insets = new Insets(0, 0, 0, 5);
 		c.anchor = GridBagConstraints.EAST;
 		gb.setConstraints(jLabel1, c);
@@ -91,7 +92,7 @@ public class DialogHelper {
 
 		// place field1 component
 		c.gridx = 1;
-		c.gridy = row;
+		c.gridy = rowCount1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(0, 0, 0, 30);
 		gb.setConstraints(quantity1, c);
@@ -100,7 +101,7 @@ public class DialogHelper {
 		// create and place label2 component
 		JLabel jLabel2= new JLabel(itemUPC2 + ": ", SwingConstants.RIGHT);	    
 		c.gridx = 2;
-		c.gridy = row;
+		c.gridy = rowCount1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(5, 5, 5, 5);
 		gb.setConstraints(jLabel2, c);
@@ -108,74 +109,18 @@ public class DialogHelper {
 
 		// place field2 component
 		c.gridx = 3;
-		c.gridy = row;
+		c.gridy = rowCount1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(0, 0, 0, 0);
 		c.anchor = GridBagConstraints.WEST;
 		gb.setConstraints(quantity2, c);
 		inputPanel.add(quantity2);
 		
-		row += 1;
+		rowCount1 += 1;
 	}
 	
 
 
-
-	// add the item upc, item title, quantity, unitPrice and subtotal to form a receipt 
-	public void addComponentsToPanel(JPanel inputPanel, String itemUPC, String itemTitle,
-			String quantity, String unitPrice, String subtotal) {
-		inputPanel.setLayout(gb);
-		
-		// create and place upc label
-		JLabel itemLabel= new JLabel(itemUPC + ": ", SwingConstants.RIGHT);	    
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridx = 0;
-		c.gridy = row2;
-		c.insets = new Insets(0, 0, 0, 10);
-		c.anchor = GridBagConstraints.EAST;
-		gb.setConstraints(itemLabel, c);
-		inputPanel.add(itemLabel);
-
-		// place title label
-		JLabel TitleLabel = new JLabel(itemTitle, SwingConstants.RIGHT);
-		c.gridx = 1;
-		c.gridy = row2;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.insets = new Insets(0, 0, 0, 10);
-		gb.setConstraints(TitleLabel, c);
-		inputPanel.add(TitleLabel);
-		
-		// create and place quantity label
-		JLabel quantityLabel= new JLabel(String.valueOf(quantity),SwingConstants.RIGHT);	    
-		c.gridx = 2;
-		c.gridy = row2;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.insets = new Insets(0, 0, 0, 10);
-		gb.setConstraints(quantityLabel, c);
-		inputPanel.add(quantityLabel);
-
-		// create and place price label
-		JLabel priceLabel= new JLabel(String.valueOf(unitPrice),SwingConstants.RIGHT);	   
-		c.gridx = 3;
-		c.gridy = row2;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.insets = new Insets(0, 0, 0, 10);
-		//c.anchor = GridBagConstraints.WEST;
-		gb.setConstraints(priceLabel, c);
-		inputPanel.add(priceLabel);
-		
-		// create and place subtotal label
-		JLabel subtotalLabel= new JLabel(String.valueOf(subtotal),SwingConstants.RIGHT);	   
-		c.gridx = 4;
-		c.gridy = row2;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.insets = new Insets(0, 0, 0, 10);
-		c.anchor = GridBagConstraints.WEST;
-		gb.setConstraints(subtotalLabel, c);
-		inputPanel.add(subtotalLabel);
-		
-		row2 += 1;
-	}
 	
 	// add the OK and Cancel buttons to the inputPane
 	public void addComponentsToPanel(JPanel inputPane, JButton button1, JButton button2) {
@@ -184,5 +129,20 @@ public class DialogHelper {
 		inputPane.add(button1);
 		inputPane.add(Box.createRigidArea(new Dimension(10,0)));
 		inputPane.add(button2);
+	}
+	
+	// add a row of fields to inputPanel
+	public void addOneRowToPanel(JPanel inputPanel, String[] stringColumns) {
+		inputPanel.setLayout(gb);
+		for (int i=0; i<stringColumns.length; ++i) {
+			JLabel fieldLabel= new JLabel(stringColumns[i],SwingConstants.RIGHT);
+			c.gridx = i;
+			c.gridy = rowCount2;
+			c.fill = GridBagConstraints.HORIZONTAL;
+			c.insets = new Insets(0, 0, 0, 10);
+			gb.setConstraints(fieldLabel, c);
+			inputPanel.add(fieldLabel);
+		}
+		rowCount2 += 1;
 	}
 }

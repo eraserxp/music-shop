@@ -48,8 +48,8 @@ public class ClerkModel {
 	}
 	
 	// obtain the unit price given the UPC of the item
-	public float queryItemPrice(int itemUPC) {
-		return 0;
+	public double queryItemPrice(int itemUPC) {
+		return 1.0;
 	}
 	
 	/******************************************************************************

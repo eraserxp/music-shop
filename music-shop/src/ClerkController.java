@@ -30,6 +30,8 @@ public class ClerkController implements ActionListener, ExceptionListener {
 		dialogHelper = new DialogHelper();
 	}
 	
+	
+	
 	/**
 	 * generate a dialog to process a purchase. It calls processPurchase method in
 	 * ClerkModel to update the database
@@ -47,64 +49,26 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			//TODO
 			super(shopGUI, "Process purchase", true);
 			//setResizable(false);
-
-			JPanel contentPane = new JPanel(new BorderLayout());
-			setContentPane(contentPane);
-			contentPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-			final JPanel inputPanel = dialogHelper.createInputPane("Purchase fields");
-			
-			dialogHelper.addComponentsToPanel(inputPanel, "Item UPC", itemUPC,
-					                           "Quantity", quantity);
-			itemUPCList.add(itemUPC);
-			quantityList.add(quantity);
-			
-			//dialogHelper.addComponentsToDialog(inputPane, "Branch name", branchName);
-			
-			
-			JPanel addMorePanel = new JPanel(new BorderLayout());
-			//JPanel generateReceiptPanel = new JPanel(new BorderLayout());
-			JButton  btnAdd = new JButton("Add more item");
-			btnAdd.addActionListener(new ActionListener(){
-
-				@Override
-				public void actionPerformed(ActionEvent e)
-				{
-					itemUPC = new JTextField(4);
-					itemUPCList.add(itemUPC);
-					quantity = new JTextField(4);
-					quantityList.add(quantity);
-					dialogHelper.addComponentsToPanel(inputPanel, "Item UPC", itemUPC,
-	                           "Quantity", quantity);
-					pack();
-				}
-
-			});
-			
-			addMorePanel.add(btnAdd);
 			
 			// create the panel to output the receipt
 			final JPanel receiptPanel = new JPanel(new BorderLayout());
 			receiptPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 30, 10));
 			
-			JButton receiptButton = new JButton("Generate/Update receipt");
-			JButton cancelButton = new JButton("Cancel");
-			receiptButton.addActionListener(this);
-			receiptButton.addActionListener(new ActionListener(){
+			class UpdateReceipt implements FocusListener, ActionListener{
 
-				@Override
-				public void actionPerformed(ActionEvent e)
-				{
+				public UpdateReceipt() {
+					//empty ;
+				}
+				
+				private void regenerateReceipt() {
 					receiptPanel.removeAll();
 					int itemUPC;
 					String title;
-					//ArrayList<Integer> quantities = new ArrayList<Integer>();
 					int quantity = 1;
 					
 					int totalQuantity = 0;
 					double unitPrice = 1.0;
 					double subtotal = 0.0; 
-					//ArrayList<Double> subtotalList = new ArrayList<Double>();
 					double totalAmount = 0.0;
 
 					dialogHelper.addComponentsToPanel(receiptPanel, "UPC", "Title", 
@@ -133,17 +97,98 @@ public class ClerkController implements ActionListener, ExceptionListener {
 						}
 					
 					}
+					// add a blank line
+					dialogHelper.addComponentsToPanel(receiptPanel, "  ", "  ", 
+					           "  " , "    ", 
+					           "  ");	
 					
 					// add the summary for the purchase
 					dialogHelper.addComponentsToPanel(receiptPanel, "SUMMARY", "  ", 
 					           "total quantity: " + totalQuantity, "    ", 
-					           "total amount: " + totalAmount);
+					           "total amount: " + totalAmount);					
+					pack();
+				}
+				
+				@Override
+				public void focusGained(FocusEvent e) {
 					
+				}
+				
+				// Invoked when a component loses the keyboard focus.
+				@Override
+				public void focusLost(FocusEvent e) {
+					regenerateReceipt();
+				}
+
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					regenerateReceipt();					
+				}
+
+
+			};
+			
+
+
+			JPanel contentPane = new JPanel(new BorderLayout());
+			setContentPane(contentPane);
+			contentPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+			final JPanel inputPanel = dialogHelper.createInputPane("Purchase fields");
+			
+			dialogHelper.addComponentsToPanel(inputPanel, "Item UPC", itemUPC,
+					                           "Quantity", quantity);
+			itemUPCList.add(itemUPC);
+			
+			final UpdateReceipt updateReceipt = new  UpdateReceipt();
+			quantityList.add(quantity);
+			// register itemUPC and quantity field to update the receipt
+			itemUPC.addActionListener(updateReceipt);
+			quantity.addActionListener(updateReceipt);
+			
+			itemUPC.addFocusListener(updateReceipt);
+			quantity.addFocusListener(updateReceipt);
+			
+			//dialogHelper.addComponentsToDialog(inputPane, "Branch name", branchName);
+			
+			
+			JPanel addMorePanel = new JPanel(new BorderLayout());
+			//JPanel generateReceiptPanel = new JPanel(new BorderLayout());
+			JButton  btnAdd = new JButton("Add more item");
+			btnAdd.addActionListener(new ActionListener(){
+
+				@Override
+				public void actionPerformed(ActionEvent e)
+				{
+					itemUPC = new JTextField(4);
+					itemUPCList.add(itemUPC);
+					quantity = new JTextField(4);
+					quantityList.add(quantity);
+					// register itemUPC and quantity field to update the receipt
+					itemUPC.addActionListener(updateReceipt);
+					quantity.addActionListener(updateReceipt);
+					
+					itemUPC.addFocusListener(updateReceipt);
+					quantity.addFocusListener(updateReceipt);
+					
+					dialogHelper.addComponentsToPanel(inputPanel, "Item UPC", itemUPC,
+	                           "Quantity", quantity);
 					pack();
 				}
 
 			});
-			//generateReceiptButton.setActionCommand("OK");
+			
+			addMorePanel.add(btnAdd);
+			
+
+			
+
+			
+			JButton OKButton = new JButton("OK");
+			OKButton.addActionListener(updateReceipt);
+			JButton cancelButton = new JButton("Cancel");
+			OKButton.addActionListener(this);
+
 			cancelButton.addActionListener(new ActionListener()
 			{
 				public void actionPerformed(ActionEvent e)
@@ -156,7 +201,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			JPanel buttonPanel = new JPanel();
 			buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
 			buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 2));
-			dialogHelper.addComponentsToPanel(buttonPanel, receiptButton, cancelButton);
+			dialogHelper.addComponentsToPanel(buttonPanel, OKButton, cancelButton);
 			
 			contentPane.add(inputPanel, BorderLayout.CENTER);
 			contentPane.add(addMorePanel, BorderLayout.NORTH);

@@ -4,3 +4,12 @@
 /ClerkController$ProcessPurchaseDialog$4.class
 /ClerkController$ProcessPurchaseDialog$1updateReceiptButton.class
 /ClerkController$ProcessPurchaseDialog$1UpdateReceipt.class
+
+# ignore all bin directories
+bin/
+
+#ignore all target directories
+target/
+
+#ignore all files ending with ~
+*~

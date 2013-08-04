@@ -153,6 +153,8 @@ public class ShopGUI extends JFrame {
 
 		//lw.addWindowListener(new ControllerRegister(mvb));	
 
+		mainGui.registerControllers();
+		
 		// pack() has to be called before centerWindow() 
 		// and setVisible()
 		//lw.pack();

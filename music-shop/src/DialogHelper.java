@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -43,8 +44,7 @@ public class DialogHelper {
 	}
 	
 
-	/* create an panel that will contain the text field labels, the text fields and 
-	* the OK and cancel buttons
+	/* create an panel and give the title for it
 	*/
 	public JPanel createInputPane(String title) {
 		JPanel inputPane = new JPanel();
@@ -77,7 +77,8 @@ public class DialogHelper {
 
 	// add the item upc and quantity fields to the inputPanel 
 	public void addComponentsToPanel(JPanel inputPanel, String itemUPC1, 
-			  JTextField quantity1, String itemUPC2, JTextField quantity2) {
+			  JTextField quantity1, String itemUPC2, JTextField quantity2,
+			  JCheckBox removeCB) {
 		inputPanel.setLayout(gb);
 		
 		// create and place label component
@@ -112,14 +113,27 @@ public class DialogHelper {
 		c.gridy = rowCount1;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.insets = new Insets(0, 0, 0, 0);
-		c.anchor = GridBagConstraints.WEST;
+		//c.anchor = GridBagConstraints.WEST;
 		gb.setConstraints(quantity2, c);
 		inputPanel.add(quantity2);
+		
+		// place the checkbox component
+		c.gridx = 4;
+		c.gridy = rowCount1;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(0, 0, 0, 0);
+		c.anchor = GridBagConstraints.WEST;
+		gb.setConstraints(removeCB, c);
+		inputPanel.add(removeCB);
 		
 		rowCount1 += 1;
 	}
 	
-
+	
+	// you should call it after you have deleted one row from the inputPanel
+//	public void decreaseRowCount1byOne() {
+//		rowCount1 -= 1;
+//	}
 
 	
 	// add the OK and Cancel buttons to the inputPane

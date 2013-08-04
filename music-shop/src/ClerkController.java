@@ -39,10 +39,13 @@ public class ClerkController implements ActionListener, ExceptionListener {
 	 */
 	class ProcessPurchaseDialog extends JDialog implements ActionListener {
 		// to save the item upc list 
-		private ArrayList<JTextField> itemUPCList = new ArrayList<JTextField>();
-		private JTextField itemUPC = new JTextField(4);
-		private ArrayList<JTextField> quantityList = new ArrayList<JTextField>();
-		private JTextField quantity = new JTextField(4);
+		private ArrayList<JTextField> upcFieldList = new ArrayList<JTextField>();
+		private JTextField upcField = new JTextField(4);
+		private ArrayList<JTextField> quantityFieldList = new ArrayList<JTextField>();
+		private JTextField quantityField = new JTextField(4);
+		private JCheckBox removeItem = new JCheckBox("remove");
+		private ArrayList<JCheckBox> checkBoxList = new ArrayList<JCheckBox>();
+		private int upc_last; // to save the last upc entered;
 		
 		// constructor
 		public ProcessPurchaseDialog(ShopGUI shopGUI) {
@@ -65,52 +68,55 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
 			buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 2));
 			
+			// an inner class to listen for the changes in the text field and 
+			// update the receipt
 			class UpdateReceipt implements FocusListener, ActionListener{
-
+				// constructor
 				public UpdateReceipt() {
 					//empty ;
 				}
 				
-				private void regenerateReceipt() {
+				public void regenerateReceipt() {
 					receiptPanel.removeAll();
-					int itemUPC;
+					int upcInt;
 					String title;
-					int quantity = 1;
-					
+					int quantity = 1;					
 					int totalQuantity = 0;
 					double unitPrice = 1.0;
 					double subtotal = 0.0; 
 					double totalAmount = 0.0;
 					String fieldNames[] = {"UPC", "Title", "quantity", "unit Price", 
 							               "subtotal"};
-					
+					// add the field names as the first row 
 					dialogHelper.addOneRowToPanel(receiptPanel, fieldNames);
 					// show upc, title, quantity, unit price and subtotal for each item
-					for (int i=0; i<itemUPCList.size(); ++i) {
-						String upc;
-						// process the text field only if its input is not empty
-						if (itemUPCList.get(i).getText().trim().length() != 0
-							&& quantityList.get(i).getText().trim().length() !=0 ) {
+					for (int i=0; i<upcFieldList.size(); ++i) {
+						String upcString;
+						// process this row only if the corresponding removeItem is not selected
+						if (!checkBoxList.get(i).isSelected()) {
+							// process the text field only if its input is not empty
+							if (upcFieldList.get(i).getText().trim().length() != 0
+								&& quantityFieldList.get(i).getText().trim().length() !=0 ) {
 
-							upc = itemUPCList.get(i).getText().trim();
-							itemUPC = Integer.parseInt(upc);
-							title = clerkModel.queryTitle(itemUPC);
-							quantity=Integer.parseInt(quantityList.get(i).getText().trim());
-							if (quantity != 0) {
-								
-								unitPrice = clerkModel.queryItemPrice(itemUPC);
-								subtotal = quantity*unitPrice;
-								totalAmount += subtotal;
-								totalQuantity += quantity;
-								String fieldValues[] = {upc, title, 
-										                 String.valueOf(quantity),
-										                 String.valueOf(unitPrice),
-										                 String.valueOf(subtotal)};
-								dialogHelper.addOneRowToPanel(receiptPanel, fieldValues);
+								upcString = upcFieldList.get(i).getText().trim();
+								upcInt = Integer.parseInt(upcString);
+								title = clerkModel.queryTitle(upcInt);
+								quantity=Integer.parseInt(quantityFieldList.get(i).getText().trim());
+								// if one item has 0 quantity, we should ignore it
+								if (quantity != 0) {							
+									unitPrice = clerkModel.queryItemPrice(upcInt);
+									subtotal = quantity*unitPrice;
+									totalAmount += subtotal;
+									totalQuantity += quantity;
+									String fieldValues[] = {upcString, title, 
+											String.valueOf(quantity),
+											String.valueOf(unitPrice),
+											String.valueOf(subtotal)};
+									dialogHelper.addOneRowToPanel(receiptPanel, fieldValues);
+								}
 							}
 						}
-					
-					}
+					} // end of for loop
 					
 					// add a blank line
 					String blanks[] = {"  ",  "  ",  "  ",  "   ",  " " }; 
@@ -125,12 +131,12 @@ public class ClerkController implements ActionListener, ExceptionListener {
 					           "total amount: " + totalAmount
 					           }; 
 					dialogHelper.addOneRowToPanel(receiptPanel, summary);				
-					pack();
+					pack(); 
 				}
 				
 				@Override
 				public void focusGained(FocusEvent e) {
-					
+					//empty
 				}
 				
 				// Invoked when a component loses the keyboard focus.
@@ -144,55 +150,91 @@ public class ClerkController implements ActionListener, ExceptionListener {
 					regenerateReceipt();					
 				}
 
-
-			};
-			
-
-
-
-			
-			dialogHelper.addComponentsToPanel(inputPanel, "Item UPC", itemUPC,
-					                           "Quantity", quantity);
-			itemUPCList.add(itemUPC);
+			}; // end of class UpdatReceipt
 			
 			final UpdateReceipt updateReceipt = new  UpdateReceipt();
-			quantityList.add(quantity);
+			
+			//Class RemoveItemListener to listen to the remove item checkbox
+			class RemoveItemListener implements ItemListener {
+				@Override
+				public void itemStateChanged(ItemEvent ie) {
+					// TODO Auto-generated method stub
+					// check all the checkbox to see which are selected
+					// and update the status for the corresponding text fields
+					for (int i=0; i<checkBoxList.size(); ++i) {
+						JCheckBox cb = checkBoxList.get(i);
+						if (cb.isSelected()) {
+							// disable its corresponding upc and quantity fields
+							upcFieldList.get(i).setEnabled(false);
+							quantityFieldList.get(i).setEnabled(false);
+							
+						} else {
+							// re-enable its corresponding upc and quantity fields
+							upcFieldList.get(i).setEnabled(true);
+							quantityFieldList.get(i).setEnabled(true);
+						}
+						// to update the receipt
+						updateReceipt.regenerateReceipt();
+					}
+					
+					
+					
+				}
+				
+			} // end of class RemoveItemListener
+			
+			final RemoveItemListener removeItemListener = new RemoveItemListener();
+			
+			// add the first row of upc and quantity fields to accept user input
+			dialogHelper.addComponentsToPanel(inputPanel, "Item UPC", upcField,
+					                           "Quantity", quantityField, removeItem);
+			upcFieldList.add(upcField);
+			quantityFieldList.add(quantityField);
+			checkBoxList.add(removeItem);
+			
+
+			
 			// register itemUPC and quantity field to update the receipt
-			itemUPC.addActionListener(updateReceipt);
-			quantity.addActionListener(updateReceipt);
+			upcField.addActionListener(updateReceipt);
+			quantityField.addActionListener(updateReceipt);
 			
-			itemUPC.addFocusListener(updateReceipt);
-			quantity.addFocusListener(updateReceipt);
+			upcField.addFocusListener(updateReceipt);
+			quantityField.addFocusListener(updateReceipt);
 			
+			removeItem.addItemListener(removeItemListener);
 			
+			// set the action commands to mark the two fields
+			upcField.setActionCommand("upc_field_0");
+			quantityField.setActionCommand("quantity_field_0");
+			
+			// use this button to add an additional row to accept upc and quantity input
 			JButton  btnAdd = new JButton("Add more item");
 			btnAdd.addActionListener(new ActionListener(){
-
 				@Override
 				public void actionPerformed(ActionEvent e)
 				{
-					itemUPC = new JTextField(4);
-					itemUPCList.add(itemUPC);
-					quantity = new JTextField(4);
-					quantityList.add(quantity);
+					upcField = new JTextField(4);
+					upcFieldList.add(upcField);
+					quantityField = new JTextField(4);
+					quantityFieldList.add(quantityField);
+					removeItem = new JCheckBox("remove");
+					checkBoxList.add(removeItem);
 					// register itemUPC and quantity field to update the receipt
-					itemUPC.addActionListener(updateReceipt);
-					quantity.addActionListener(updateReceipt);
-					
-					itemUPC.addFocusListener(updateReceipt);
-					quantity.addFocusListener(updateReceipt);
-					
-					dialogHelper.addComponentsToPanel(inputPanel, "Item UPC", itemUPC,
-	                           "Quantity", quantity);
+					upcField.addActionListener(updateReceipt);
+					quantityField.addActionListener(updateReceipt);					
+					upcField.addFocusListener(updateReceipt);
+					quantityField.addFocusListener(updateReceipt);
+					removeItem.addItemListener(removeItemListener);
+					// add itemUPC and quantity text fields as a row
+					dialogHelper.addComponentsToPanel(inputPanel, "Item UPC", upcField,
+	                           "Quantity", quantityField, removeItem);
 					pack();
 				}
 
 			});
 			
 			addMorePanel.add(btnAdd);
-			
-
-						
+									
 			JButton OKButton = new JButton("OK");
 			OKButton.addActionListener(updateReceipt);
 			JButton cancelButton = new JButton("Cancel");
@@ -225,8 +267,55 @@ public class ClerkController implements ActionListener, ExceptionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			// TODO Auto-generated method stub
+			// find out the type of source (itemUPC or quantity)
+			if (e.getActionCommand().equals("item UPC")) {
+				JTextField upcField = (JTextField) e.getSource(); //get the event source
+				if (upcField.getText().trim().length() != 0) {
+					int upc = Integer.parseInt(upcField.getText().trim());
+					// save the upc
+					upc_last = upc;
+					// if the upc is not valid
+					if (!validateItemUPC(upc)) {
+						Toolkit.getDefaultToolkit().beep();
+
+						// display a popup to inform the user of the validation error
+						JOptionPane errorPopup = new JOptionPane();
+						errorPopup.showMessageDialog(this, "Invalid UPC", "Error", JOptionPane.ERROR_MESSAGE);
+					}
+				} 
+			} else if (e.getActionCommand().equals("item quantity")) {
+				JTextField quantityField = (JTextField) e.getSource(); //get the event source
+				if (quantityField.getText().trim().length() != 0) {
+					int quantity = Integer.parseInt(quantityField.getText().trim());
+					// if the input quantity is not valid
+					if (!validateInputQuantity(upc_last,quantity)) {
+						Toolkit.getDefaultToolkit().beep();
+
+						// display a popup to inform the user of the validation error
+						JOptionPane errorPopup = new JOptionPane();
+						errorPopup.showMessageDialog(this, "Invalid UPC", "Error", JOptionPane.ERROR_MESSAGE);
+					}
+				} 
+			}
+			
 			
 		}
+		
+		private boolean validateItemUPC(int upc) { 
+			return clerkModel.isUPCValid(upc);
+		}
+		
+		private boolean validateInputQuantity(int upc, int quantity) {
+			return clerkModel.queryItemQuantity(upc) >= quantity;
+		}
+		
+		// set the markers for a list of text fields so that you can
+		// remove or update them later
+		private void setMarkersForFields(ArrayList<JTextField> fields, String prefix) {
+			for (int i=0; i < fields.size(); ++i) {
+				fields.get(i).setActionCommand(prefix + Integer.toString(i));
+			}
+		} // end of setMarkersForFields
 		
 	}
 	

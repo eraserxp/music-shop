@@ -43,6 +43,7 @@ public class ClerkModel {
 		
 	}
 	
+	// obtain the title given the item UPC
 	public String queryTitle(int itemUPC) {
 		return "title";
 	}
@@ -50,6 +51,19 @@ public class ClerkModel {
 	// obtain the unit price given the UPC of the item
 	public double queryItemPrice(int itemUPC) {
 		return 1.0;
+	}
+	
+	// check whether the item UPC is valid or not
+	public boolean isUPCValid(int itemUPC) {
+		if (itemUPC == 0) {
+			return false;
+		}
+		return true;
+	}
+	
+	// obtain the stok quantity of an item
+	public int queryItemQuantity(int itemUPC) {
+		return 2;
 	}
 	
 	/******************************************************************************

@@ -12,6 +12,8 @@ public class LoginWindow extends JDialog implements ActionListener
 {
 	// MyOracleConnection represents a connection to an Oracle database
 	private MyOracleConnection moc = MyOracleConnection.getInstance();
+	
+	private ShopGUI mainGui;
 
 	// record the login attempts (maximum is 3) 
 	private int loginAttempts = 0;
@@ -27,13 +29,14 @@ public class LoginWindow extends JDialog implements ActionListener
 	/*
 	 * constructor for LogInWindow
 	 */
-	public LoginWindow(JFrame parent)
+	public LoginWindow(ShopGUI mainGui)
 	{
 		// set up the title for the login window
-		super(parent, "User Login", true);
+		super(mainGui, "User Login", true);
 		// don't allow the user to resize this window
 		setResizable(false);
 		
+		this.mainGui = mainGui;
 		usernameField.setText("ora_w2u8");
 		// every character entered in the password field is echoed by '*'
 		passwordField.setEchoChar('*');
@@ -135,10 +138,12 @@ public class LoginWindow extends JDialog implements ActionListener
 				String.valueOf(passwordField.getPassword()))) {
 			// if the username and password are valid, 
 			// get rid of the login window
+			mainGui.updateStatusBar("Log into oracle database successfully!\n");
 			dispose();     
 		} else {
-			loginAttempts++;
-
+			loginAttempts++;	
+			mainGui.updateStatusBar("Try to log into oracle database. Attempt: " 
+				      + loginAttempts + " \n");
 			if (loginAttempts >= 3) {
 				dispose();
 				System.exit(0);

@@ -59,9 +59,33 @@ public class ShopGUI extends JFrame {
 		// indent first menu
 		menuBar.add(Box.createRigidArea(new Dimension(10,0)));
 		
+		// add up menus
 		setUpClerkMenu(menuBar);
 		setUpCustomerMenu(menuBar);
 		setUpManagerMenu(menuBar);
+		
+		// the scrollpane for the status text field
+		JScrollPane statusScrPane = new JScrollPane(statusField);
+		statusScrPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		statusScrPane.setBorder(BorderFactory.createLoweredBevelBorder());
+
+		// set status field properties
+		statusField.setEditable(false);
+		statusField.setLineWrap(true);
+		statusField.setWrapStyleWord(true);
+
+		// add the status panes to the content pane
+		contentPane.add(statusScrPane, BorderLayout.CENTER);
+		
+		JLabel statusLabel = new JLabel("Status message: ");
+		contentPane.add(statusLabel, BorderLayout.NORTH);
+		
+		// anonymous inner class to terminate program
+		addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				System.exit(0);
+			}
+		});	
 
 
 	}
@@ -141,6 +165,19 @@ public class ShopGUI extends JFrame {
 	}
 	
 	
+	/*
+	 * This method adds the given string to the status text area 
+	 */
+	public void updateStatusBar(String s)
+	{
+		// trim() removes whitespace and control characters at both ends of the string
+		statusField.append(s.trim() + "\n"); 
+
+		// This informs the scroll pane to update itself and its scroll bars.
+		// The scroll pane does not always automatically scroll to the message that was
+		// just added to the text area. This line guarantees that it does.
+		statusField.revalidate();
+	}
 	
 	public static void main(String[] args) {
 		ShopGUI mainGui = new ShopGUI();

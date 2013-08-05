@@ -15,7 +15,7 @@ create table Item(
 	category varchar(20) not null,
 	company varchar(40) not null,
 	year char(10) not null,
-	price int not null,
+	price float not null,
 	stock int not null,
 	PRIMARY KEY (upc)
 	);
@@ -89,7 +89,7 @@ create table ReturnItem(
 	);
 
 insert into Item
-values(11111, 'The Key', 'CD', 'pop', 'BMG', '2013', 12, 100);
+values(11111, 'The Key', 'CD', 'pop', 'BMG', '2013', 12.50, 100);
 insert into LeadSinger
 values(11111, 'Eason Chen');		
 insert into HasSong
@@ -101,7 +101,7 @@ values(11111, 'So far So close');
 
 
 insert into Item
-values(11112, 'In A World Like This', 'CD', 'pop', 'BMG', '2013', 15, 200);
+values(11112, 'In A World Like This', 'CD', 'pop', 'BMG', '2013', 15.99, 200);
 insert into LeadSinger
 values(11112, 'Backstrret Boys');		
 insert into HasSong
@@ -116,7 +116,7 @@ insert into HasSong
 values(11112, 'Make Believe');	
 
 insert into Item
-values(11113, 'Everything Has Changed', 'CD', 'pop', 'BMG', '2013', 10, 200);
+values(11113, 'Everything Has Changed', 'CD', 'pop', 'BMG', '2013', 10.65, 200);
 insert into LeadSinger
 values(11113, 'Taylor Swift');	
 insert into LeadSinger
@@ -125,14 +125,14 @@ insert into HasSong
 values(11113, 'Everything Has Changed');		
 
 insert into Item
-values(11114, 'Tunnel Vision', 'DVD', 'RandB', 'RCA Records', '2013', 10, 100);
+values(11114, 'Tunnel Vision', 'DVD', 'RandB', 'RCA Records', '2013', 10.99, 100);
 insert into LeadSinger
 values(11114, 'Justin Timberlake');			
 insert into HasSong
 values(11114, 'Tunnel Vision');	
 
 insert into Item
-values(11115, 'Mr. Timberlake', 'DVD', 'RandB', 'RCA Records', '2008', 10, 100);
+values(11115, 'Mr. Timberlake', 'DVD', 'RandB', 'RCA Records', '2008', 10.35, 100);
 insert into LeadSinger
 values(11115, 'Justin Timberlake');		
 insert into LeadSinger
@@ -141,7 +141,7 @@ insert into HasSong
 values(11115, 'Until the End of Time');
 
 insert into Item
-values(11116, 'Pacific Rim', 'DVD', 'classic', 'Sony', '2013', 10, 100);
+values(11116, 'Pacific Rim', 'DVD', 'classic', 'Sony', '2013', 10.25, 100);
 insert into LeadSinger
 values(11116, 'Ramin Djawadi');			
 insert into HasSong

@@ -57,13 +57,15 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			JPanel contentPane = new JPanel(new BorderLayout());
 			setContentPane(contentPane);
 			contentPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-			// create the panel to accept user input
-			final JPanel inputPanel = dialogHelper.createInputPane("Purchase items");
+			// create the input panel to hold the add-more-item button and the item panel
+			JPanel inputPanel = new JPanel(new BorderLayout());
+			// create the panel to hold the purchase items
+			final JPanel itemPanel = dialogHelper.createInputPane("Purchase items");
 			// create the panel to output the receipt
 			final JPanel receiptPanel = new JPanel(new BorderLayout());
 			receiptPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 30, 10));
 			// create the panel to hold the "add more item" button
-			JPanel addMorePanel = new JPanel(new BorderLayout());
+			//JPanel addMorePanel = new JPanel(new BorderLayout());
 			// create panel for the OK and cancel buttons
 			JPanel buttonPanel = new JPanel();
 			buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
@@ -201,7 +203,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			final RemoveItemListener removeItemListener = new RemoveItemListener();
 			
 			// add the first row of upc and quantity fields to accept user input
-			dialogHelper.addComponentsToPanel(inputPanel, "Item UPC", upcField,
+			dialogHelper.addComponentsToPanel(itemPanel, "Item UPC", upcField,
 					                           "Quantity", quantityField, removeItem);
 			upcFieldList.add(upcField);
 			quantityFieldList.add(quantityField);
@@ -238,17 +240,18 @@ public class ClerkController implements ActionListener, ExceptionListener {
 					removeItem.addItemListener(removeItemListener);
 					removeItem.addActionListener(updateReceipt);
 					// add itemUPC and quantity text fields as a row
-					dialogHelper.addComponentsToPanel(inputPanel, "Item UPC", upcField,
+					dialogHelper.addComponentsToPanel(itemPanel, "Item UPC", upcField,
 	                           "Quantity", quantityField, removeItem);
 					pack();
 				}
 
 			});
 			
-			addMorePanel.add(btnAdd);
+
 									
-			JButton OKButton = new JButton("OK");
-			OKButton.addActionListener(updateReceipt);
+			final JButton OKButton = new JButton("OK");
+			OKButton.setEnabled(false);
+			//OKButton.addActionListener(updateReceipt);
 			JButton cancelButton = new JButton("Cancel");
 			OKButton.addActionListener(this);
 			cancelButton.addActionListener(new ActionListener()
@@ -259,11 +262,33 @@ public class ClerkController implements ActionListener, ExceptionListener {
 				}
 			});
 			
+			JCheckBox confirmPurchase = new JCheckBox("Confirm purchase");
+			// once the confirm purchase is selected, update the receipt automatically
+			confirmPurchase.addActionListener(updateReceipt);
+			// if the confirm button is not selected, disable the OK button
+			// otherwise, enable the OK button
+			confirmPurchase.addItemListener(new ItemListener() {
+				
+				@Override
+				public void itemStateChanged(ItemEvent ie) {
+					// TODO Auto-generated method stub
+					JCheckBox cb = (JCheckBox) ie.getSource();
+					if (cb.isSelected()) {
+						OKButton.setEnabled(true);
+					} else {
+						OKButton.setEnabled(false);
+					}
+				}
+			});
+			
 			// add the OK and cancel buttons to the button panel
 			dialogHelper.addComponentsToPanel(buttonPanel, OKButton, cancelButton);
 			
+			inputPanel.add(btnAdd, BorderLayout.NORTH);
+			inputPanel.add(itemPanel,BorderLayout.CENTER);
+			inputPanel.add(confirmPurchase, BorderLayout.SOUTH);
+			
 			contentPane.add(inputPanel, BorderLayout.CENTER);
-			contentPane.add(addMorePanel, BorderLayout.NORTH);
 			contentPane.add(buttonPanel, BorderLayout.SOUTH);
 			contentPane.add(receiptPanel, BorderLayout.EAST);
 			

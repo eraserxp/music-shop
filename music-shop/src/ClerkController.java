@@ -188,7 +188,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 							quantityFieldList.get(i).setEnabled(true);
 						}
 						// to update the receipt
-						updateReceipt.regenerateReceipt();
+						//updateReceipt.regenerateReceipt();
 					}
 					
 					
@@ -213,6 +213,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			quantityField.addActionListener(updateReceipt);
 			
 			removeItem.addItemListener(removeItemListener);
+			removeItem.addActionListener(updateReceipt);
 			
 			// set the action commands to mark the two fields
 			upcField.setActionCommand("upc_field_0");
@@ -234,6 +235,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 					upcField.addActionListener(updateReceipt);
 					quantityField.addActionListener(updateReceipt);					
 					removeItem.addItemListener(removeItemListener);
+					removeItem.addActionListener(updateReceipt);
 					// add itemUPC and quantity text fields as a row
 					dialogHelper.addComponentsToPanel(inputPanel, "Item UPC", upcField,
 	                           "Quantity", quantityField, removeItem);

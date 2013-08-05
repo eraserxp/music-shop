@@ -89,7 +89,7 @@ create table ReturnItem(
 	);
 
 insert into Item
-values(11111, 'The Key', 'CD', 'pop', 'EMI', '2013', 12, 100);
+values(11111, 'The Key', 'CD', 'pop', 'BMG', '2013', 12, 100);
 insert into LeadSinger
 values(11111, 'Eason Chen');		
 insert into HasSong
@@ -116,7 +116,7 @@ insert into HasSong
 values(11112, 'Make Believe');	
 
 insert into Item
-values(11113, 'Everything Has Changed', 'CD', 'pop', 'Big Machine Records', '2013', 10, 200);
+values(11113, 'Everything Has Changed', 'CD', 'pop', 'BMG', '2013', 10, 200);
 insert into LeadSinger
 values(11113, 'Taylor Swift');	
 insert into LeadSinger
@@ -132,7 +132,7 @@ insert into HasSong
 values(11114, 'Tunnel Vision');	
 
 insert into Item
-values(11115, 'Mr. Timberlake', 'DVD', 'RandB', 'Jive', '2008', 10, 100);
+values(11115, 'Mr. Timberlake', 'DVD', 'RandB', 'RCA Records', '2008', 10, 100);
 insert into LeadSinger
 values(11115, 'Justin Timberlake');		
 insert into LeadSinger
@@ -141,7 +141,7 @@ insert into HasSong
 values(11115, 'Until the End of Time');
 
 insert into Item
-values(11116, 'Pacific Rim', 'DVD', 'pop', 'Sony', '2013', 10, 100);
+values(11116, 'Pacific Rim', 'DVD', 'classic', 'Sony', '2013', 10, 100);
 insert into LeadSinger
 values(11116, 'Ramin Djawadi');			
 insert into HasSong

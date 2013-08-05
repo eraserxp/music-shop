@@ -71,12 +71,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			
 			// an inner class to listen for the changes in the text field and 
 			// update the receipt
-			class UpdateReceipt implements ActionListener { //FocusListener, ActionListener{
-				// constructor
-				public UpdateReceipt() {
-					//empty ;
-				}
-				
+			class UpdateReceipt implements ActionListener {
 				public void regenerateReceipt() {
 					receiptPanel.removeAll();
 					int upcInt;
@@ -164,17 +159,6 @@ public class ClerkController implements ActionListener, ExceptionListener {
 					pack(); 
 				}
 				
-//				@Override
-//				public void focusGained(FocusEvent e) {
-//					//empty
-//				}
-				
-//				// Invoked when a component loses the keyboard focus.
-//				@Override
-//				public void focusLost(FocusEvent e) {
-//					regenerateReceipt();
-//				}
-
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
 					regenerateReceipt();					
@@ -228,9 +212,6 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			upcField.addActionListener(updateReceipt);
 			quantityField.addActionListener(updateReceipt);
 			
-//			upcField.addFocusListener(updateReceipt);
-//			quantityField.addFocusListener(updateReceipt);
-			
 			removeItem.addItemListener(removeItemListener);
 			
 			// set the action commands to mark the two fields
@@ -252,8 +233,6 @@ public class ClerkController implements ActionListener, ExceptionListener {
 					// register itemUPC and quantity field to update the receipt
 					upcField.addActionListener(updateReceipt);
 					quantityField.addActionListener(updateReceipt);					
-//					upcField.addFocusListener(updateReceipt);
-//					quantityField.addFocusListener(updateReceipt);
 					removeItem.addItemListener(removeItemListener);
 					// add itemUPC and quantity text fields as a row
 					dialogHelper.addComponentsToPanel(inputPanel, "Item UPC", upcField,
@@ -296,39 +275,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 		
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			// TODO Auto-generated method stub
-			// find out the type of source (itemUPC or quantity)
-			if (e.getActionCommand().equals("item UPC")) {
-				JTextField upcField = (JTextField) e.getSource(); //get the event source
-				if (upcField.getText().trim().length() != 0) {
-					int upc = Integer.parseInt(upcField.getText().trim());
-					// save the upc
-					upc_last = upc;
-					// if the upc is not valid
-					if (!validateItemUPC(upc)) {
-						Toolkit.getDefaultToolkit().beep();
-
-						// display a popup to inform the user of the validation error
-						JOptionPane errorPopup = new JOptionPane();
-						errorPopup.showMessageDialog(this, "Invalid UPC", "Error", JOptionPane.ERROR_MESSAGE);
-					}
-				} 
-			} else if (e.getActionCommand().equals("item quantity")) {
-				JTextField quantityField = (JTextField) e.getSource(); //get the event source
-				if (quantityField.getText().trim().length() != 0) {
-					int quantity = Integer.parseInt(quantityField.getText().trim());
-					// if the input quantity is not valid
-					if (!validateInputQuantity(upc_last,quantity)) {
-						Toolkit.getDefaultToolkit().beep();
-
-						// display a popup to inform the user of the validation error
-						JOptionPane errorPopup = new JOptionPane();
-						errorPopup.showMessageDialog(this, "Invalid UPC", "Error", JOptionPane.ERROR_MESSAGE);
-					}
-				} 
-			}
-			
-			
+			// TODO Auto-generated method stub			
 		}
 		
 		private boolean validateItemUPC(int upc) { 
@@ -340,14 +287,6 @@ public class ClerkController implements ActionListener, ExceptionListener {
 					quantity >=1;
 		}
 		
-		
-		// set the markers for a list of text fields so that you can
-		// remove or update them later
-		private void setMarkersForFields(ArrayList<JTextField> fields, String prefix) {
-			for (int i=0; i < fields.size(); ++i) {
-				fields.get(i).setActionCommand(prefix + Integer.toString(i));
-			}
-		} // end of setMarkersForFields
 		
 		private void popUpErrorMessage(String message) {
 			Toolkit.getDefaultToolkit().beep();

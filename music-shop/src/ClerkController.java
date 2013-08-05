@@ -57,7 +57,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			setContentPane(contentPane);
 			contentPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 			// create the panel to accept user input
-			final JPanel inputPanel = dialogHelper.createInputPane("Purchase fields");
+			final JPanel inputPanel = dialogHelper.createInputPane("Purchase items");
 			// create the panel to output the receipt
 			final JPanel receiptPanel = new JPanel(new BorderLayout());
 			receiptPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 30, 10));

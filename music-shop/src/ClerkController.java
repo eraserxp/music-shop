@@ -72,7 +72,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			// an inner class to listen for the changes in the text field and 
 			// update the receipt
 			class UpdateReceipt implements ActionListener {
-				public void regenerateReceipt() {
+				private void regenerateReceipt() {
 					receiptPanel.removeAll();
 					int upcInt;
 					String title;
@@ -148,9 +148,10 @@ public class ClerkController implements ActionListener, ExceptionListener {
 					
 
 					// add the summary for the purchase
+					//int = 
 					String summary[] = {
 							   "SUMMARY", 
-							    "  ", 
+							    "receipt id: " + clerkModel.getNextReceiptID(), 
 					           "total quantity: " + totalQuantity, 
 					           "    ", 
 					           "total amount: " + numberFormatter.format(totalAmount)

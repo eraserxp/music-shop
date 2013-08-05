@@ -134,7 +134,42 @@ public class ClerkModel {
 		}
 		return stockQuantity;
 	}
-	
+
+	// obtain the next receiptID and decrement it by 1 in the database
+	// so that this function will not change the nextval of the sequence
+	public int getNextReceiptID() {
+		int nextReceiptID = 0; 
+		ResultSet rs;
+		String getNext = "select receiptID_counter.nextval from dual";
+		String decrementByOne = "alter sequence receiptID_counter increment by -1";
+		String resetToOriginal = "select receiptID_counter.nextval from dual";
+		String incrementByOne = "alter sequence receiptID_counter increment by 1";
+		
+		try {
+			Statement stmt = con.createStatement();
+			rs = stmt.executeQuery(getNext);
+			while (rs.next()) {
+				nextReceiptID = rs.getInt(1);	
+			}
+			
+			stmt.executeQuery(decrementByOne);
+			stmt.executeQuery(resetToOriginal);
+			stmt.executeQuery(incrementByOne);
+			//execute several sql statement as batch
+//			stmt.addBatch(decrementByOne);
+//			stmt.addBatch(resetToOriginal);
+//			stmt.addBatch(incrementByOne);
+//			stmt.addBatch(getNext);
+//			stmt.executeBatch();
+//			con.commit();
+		} catch (SQLException ex) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+		}
+		return nextReceiptID + 1;
+	}
 	/******************************************************************************
 	 * Below are the methods to add and remove ExceptionListeners.
 	 * 

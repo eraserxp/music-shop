@@ -7,6 +7,9 @@ Drop table Purchase;
 Drop table Customer;
 Drop table Item;
 
+drop sequence cid_counter;
+drop sequence receiptID_counter;
+drop sequence retid_counter;
 
 create table Item(
 	upc int not null,
@@ -14,7 +17,7 @@ create table Item(
 	type  varchar(10) not null,
 	category varchar(20) not null,
 	company varchar(40) not null,
-	year char(10) not null,
+	year char(4) not null,
 	price float not null,
 	stock int not null,
 	PRIMARY KEY (upc)
@@ -36,9 +39,12 @@ create table HasSong(
 	FOREIGN KEY (upc) references Item
 	);
 
+create sequence cid_counter
+start with 1
+increment by 1;
 
 create table Customer(
-	cid varchar(8) not null ,
+	cid int not null ,
 	cpassword varchar(10) not null,
 	cname varchar(40) not null,
 	caddress varchar(60) not null,
@@ -46,22 +52,25 @@ create table Customer(
 	PRIMARY KEY (cid)
 	);
 	
+create sequence receiptID_counter
+start with 1
+increment by 1;
 	
 create table Purchase(
-	receiptID varchar(10) not null,
+	receiptID int not null,
 	Pdate varchar(20) not null,
-	cid  varchar(8) null,
+	cid  int,
 	cardN int ,
-	expiryDate varchar(20) ,
-	expectedDate varchar(20) ,
-	deliveredDate varchar(20),
+	expiryDate date ,
+	expectedDate date ,
+	deliveredDate date,
 	PRIMARY KEY (receiptID),
 	FOREIGN KEY (cid) references Customer
 	);
 	
 
 create table PurchaseItem(
-	receiptID varchar(10) not null ,
+	receiptID int not null ,
 	upc int not null ,
 	quantity int not null,
 	PRIMARY KEY (receiptID, upc),
@@ -69,18 +78,21 @@ create table PurchaseItem(
 	FOREIGN KEY (receiptID) references Purchase
 	);
 	
+create sequence retid_counter
+start with 1
+increment by 1;
 	
 create table Return(
-	retid varchar(10) not null,
-	redate varchar(20) not null,
-	receiptID varchar(10) not null,
+	retid int not null,
+	redate date not null,
+	receiptID int not null,
 	PRIMARY KEY (retid),
 	FOREIGN KEY (receiptID) references Purchase
 	);
 	
 	
 create table ReturnItem(
-	retid varchar(10) not null ,
+	retid int not null ,
 	upc int not null ,
 	quantity int not null,
 	PRIMARY KEY (retid, upc),
@@ -154,78 +166,83 @@ insert into HasSong
 values(11116, 'Better than New');	
 
 insert into Customer
-values('Andy', 'Andypw', 'Andy Lau', '1234 Main Mall', 6048221111);
+values(cid_counter.nextval, 'Andypw', 'Andy Lau', '1234 Main Mall', 6048221111);
 insert into Customer
-values('Hebe', 'Hebepw', 'Hebe T', '1221 Main Mall', 6048220000);
+values(cid_counter.nextval, 'Hebepw', 'Hebe T', '1221 Main Mall', 6048220000);
 insert into Customer
-values('Tony', 'Tonypw', 'Tony Leung', '1200 Main Mall', 6048222222);
+values(cid_counter.nextval, 'Tonypw', 'Tony Leung', '1200 Main Mall', 6048222222);
 insert into Customer
-values('Jone', 'Jonepw', 'Jone Ross', '1200 Main Mall', 6048223333);
+values(cid_counter.nextval, 'Jonepw', 'Jone Ross', '1200 Main Mall', 6048223333);
 insert into Customer
-values('Rachel', 'Rachelpw', 'Rachel Green', '1204 Main Mall', 6048224444);
+values(cid_counter.nextval, 'Rachelpw', 'Rachel Green', '1204 Main Mall', 6048224444);
 insert into Customer
-values('chandler', 'cpw', 'Chandler Bing', '1205 Main Mall', 6048225555);
+values(cid_counter.nextval, 'cpw', 'Chandler Bing', '1205 Main Mall', 6048225555);
 
 insert into Purchase
-values('A123456789', '2013-08-01', null, 1234123412341234, '2014-01-01', null, null);	
+values(receiptID_counter.nextval, '2013-08-01', null, 1234123412341234, '2014-01-01', null, null);	
 insert into PurchaseItem
-values('A123456789', 11111, 1);	
+values(receiptID_counter.currval, 11111, 1);
+	
 insert into Purchase
-values('A111111111', '2013-08-02', null, null, null, null, null);	
+values(receiptID_counter.nextval, '2013-08-02', null, null, null, null, null);	
 insert into PurchaseItem
-values('A111111111', 11111, 1);	
+values(receiptID_counter.currval, 11111, 1);	
 insert into PurchaseItem
-values('A111111111', 11112, 1);	
+values(receiptID_counter.currval, 11112, 1);	
 
 insert into Purchase
-values('A111111112', '2013-07-02', 'Tony', 1234123412341111, '2014-03-03', '2013-07-06', '2013-07-05');	
+values(receiptID_counter.nextval, '2013-07-02', 4, 1234123412341111, '2014-03-03', '2013-07-06',  '2013-07-05');	
 insert into PurchaseItem
-values('A111111112', 11112, 2);		
+values(receiptID_counter.currval, 11112, 2);		
 insert into PurchaseItem
-values('A111111112', 11115, 1);	
+values(receiptID_counter.currval, 11115, 1);	
 insert into PurchaseItem
-values('A111111112', 11113, 1);
+values(receiptID_counter.currval, 11113, 1);
 
 insert into Purchase
-values('A111111113', '2013-08-01', null, 1234123412341222, '2015-01-01', null, null);	
+values(receiptID_counter.nextval, '2013-08-01', null, 1234123412341222, '2015-01-01', null, null);	
 insert into PurchaseItem
-values('A111111113', 11111, 1);	
+values(receiptID_counter.currval, 11111, 1);	
 insert into PurchaseItem
-values('A111111113', 11112, 1);	
+values(receiptID_counter.currval, 11112, 1);	
 
 insert into Purchase
-values('A111111114', '2013-08-02', null, null, null, null, null);	
+values(receiptID_counter.nextval, '2013-08-02', null, null, null, null, null);	
 insert into PurchaseItem
-values('A111111114', 11111, 1);	
+values(receiptID_counter.currval, 11111, 1);	
 insert into PurchaseItem
-values('A111111114', 11112, 1);
+values(receiptID_counter.currval, 11112, 1);
+
 insert into Purchase
-values('A111111115', '2013-08-02', null, null, null, null, null);	
+values(receiptID_counter.nextval, '2013-08-02', null, null, null, null, null);	
 insert into PurchaseItem
-values('A111111115', 11111, 1);	
+values(receiptID_counter.currval, 11111, 1);	
 insert into PurchaseItem
-values('A111111115', 11115, 1);
+values(receiptID_counter.currval, 11115, 1);
+
 insert into Purchase
-values('A111111116', '2013-08-02', null, null, null, null, null);	
+values(receiptID_counter.nextval, '2013-08-02', null, null, null, null, null);	
 insert into PurchaseItem
-values('A111111116', 11111, 1);	
+values(receiptID_counter.currval,  11111, 1);	
 insert into PurchaseItem
-values('A111111116', 11112, 1);
+values(receiptID_counter.currval,  11112, 1);
 insert into PurchaseItem
-values('A111111111', 11113, 1);	
+values(receiptID_counter.currval,  11113, 1);	
 insert into PurchaseItem
-values('A111111111', 11115, 1);
+values(receiptID_counter.currval,  11115, 1);
 
 	
 insert into Return
-values('R111111112', '2013-07-22', 'A111111112');
+values(retid_counter.nextval, '2013-07-22', 2);
 insert into ReturnItem
-values('R111111112', 11112, 1);	
+values(retid_counter.currval, 11111, 1);	
+
 insert into Return
-values('R111111113', '2013-08-02', 'A111111113');
+values(retid_counter.nextval, '2013-08-02', 3);
 insert into ReturnItem
-values('R111111113', 11112, 1);
+values(retid_counter.currval, 11112, 1);
+
 insert into Return
-values('R111111114', '2013-08-05', 'A111111113');
+values(retid_counter.nextval,'2013-08-05', 4);
 insert into ReturnItem
-values('R111111114', 11111, 1);
+values(retid_counter.currval, 11111, 1);

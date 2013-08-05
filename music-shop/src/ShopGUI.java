@@ -3,6 +3,7 @@
 
 import java.awt.*;
 import java.awt.event.*;
+
 import javax.swing.*;
 import javax.swing.border.*;
 
@@ -149,19 +150,45 @@ public class ShopGUI extends JFrame {
 		mainGui.setVisible(true);
 
 		// create the login window
-		//LoginWindow lw = new LoginWindow(mainGui);	      
+		LoginWindow lw = new LoginWindow(mainGui);	      
 
-		//lw.addWindowListener(new ControllerRegister(mvb));	
+		// only after the login window disappeared, the controllers are created
+		// otherwise, the controller will not be associated with the successful
+		// connection of the database
+		lw.addWindowListener(new ControllerRegister(mainGui));	
 
-		mainGui.registerControllers();
+		//mainGui.registerControllers();
 		
 		// pack() has to be called before centerWindow() 
 		// and setVisible()
-		//lw.pack();
+		lw.pack();
 
 		//mainGui.centerWindow(lw);
 
-		//lw.setVisible(true); 
+		lw.setVisible(true); 
 	}
 	
 }
+
+
+/*
+ * Event handler for login window. After the user logs in (after login
+ * window closes), the controllers that handle events on the menu items
+ * are created. The controllers cannot be created before the user logs 
+ * in because the database connection is not valid at that time. The 
+ * models that are created by the controllers require a valid database 
+ * connection.
+ */ 
+class ControllerRegister extends WindowAdapter {
+	private ShopGUI shopGUI; 
+
+	public ControllerRegister(ShopGUI shopGUI)
+	{
+		this.shopGUI = shopGUI;
+	}
+
+	public void windowClosed(WindowEvent e)
+	{	
+		shopGUI.registerControllers();
+	}
+} 

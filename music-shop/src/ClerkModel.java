@@ -27,8 +27,7 @@ public class ClerkModel {
 	 * Precondition: The Connection object in MvbOracleConnection must be
 	 * a valid database connection.
 	 */ 
-	public ClerkModel()
-	{
+	public ClerkModel() {
 		con = MyOracleConnection.getInstance().getConnection();
 	}
 
@@ -45,25 +44,95 @@ public class ClerkModel {
 	
 	// obtain the title given the item UPC
 	public String queryTitle(int itemUPC) {
-		return "title";
+		String title = null; 
+		ResultSet rs;
+		String sqlStatement = "select title from Item where upc = ?";
+		                      
+		try {
+			ps = con.prepareStatement(sqlStatement);
+			ps.setInt(1,itemUPC);
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				title = rs.getString("title");	
+			}
+		} catch (SQLException ex) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+		}
+		return title;
 	}
 	
 	// obtain the unit price given the UPC of the item
 	public double queryItemPrice(int itemUPC) {
-		return 1.0;
+		double unitPrice = 0.0; 
+		ResultSet rs;
+		String sqlStatement = "select price from Item where upc = ?";
+		                      
+		try {
+			ps = con.prepareStatement(sqlStatement);
+			ps.setInt(1,itemUPC);
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				unitPrice = rs.getDouble("price");	
+			}
+		} catch (SQLException ex) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+		}
+		return unitPrice;
 	}
 	
 	// check whether the item UPC is valid or not
 	public boolean isUPCValid(int itemUPC) {
-		if (itemUPC == 0) {
-			return false;
+		//boolean isValid = false;
+		String title = null;
+		// every item must have a non-null title 
+		String sqlStatement = "select title from Item where upc = ?";
+		try {
+			ps = con.prepareStatement(sqlStatement);
+			ps.setInt(1,itemUPC);
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				title = rs.getString("title");	
+			}
+		} catch (SQLException ex) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
 		}
-		return true;
+
+		if (title == null) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 	
 	// obtain the stok quantity of an item
 	public int queryItemQuantity(int itemUPC) {
-		return 2;
+		int stockQuantity = 0; 
+		ResultSet rs;
+		String sqlStatement = "select stock from Item where upc = ?";
+		                      
+		try {
+			ps = con.prepareStatement(sqlStatement);
+			ps.setInt(1,itemUPC);
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				stockQuantity = rs.getInt("stock");	
+			}
+		} catch (SQLException ex) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+		}
+		return stockQuantity;
 	}
 	
 	/******************************************************************************

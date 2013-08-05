@@ -6,6 +6,7 @@ import javax.swing.border.*;
 
 
 import java.sql.*;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 
 
@@ -82,26 +83,31 @@ public class ClerkController implements ActionListener, ExceptionListener {
 					String title;
 					int quantity = 1;					
 					int totalQuantity = 0;
-					double unitPrice = 1.0;
-					double subtotal = 0.0; 
+					double unitPrice;
+					double subtotal; 
 					double totalAmount = 0.0;
+					// set the decimal digits to be 2
+					NumberFormat numberFormatter = NumberFormat.getNumberInstance();
+					numberFormatter.setMinimumFractionDigits(2);
+					numberFormatter.setMaximumFractionDigits(2);
+					
 					String fieldNames[] = {"UPC", "Title", "quantity", "unit Price", 
 							               "subtotal"};
 					// add the field names as the first row 
 					dialogHelper.addOneRowToPanel(receiptPanel, fieldNames);
 					// show upc, title, quantity, unit price and subtotal for each item
+					itemLoop:
 					for (int i=0; i<upcFieldList.size(); ++i) {
 						String upcString;
 						// process this row only if the corresponding removeItem is not selected
-						if (!checkBoxList.get(i).isSelected()) {
-							
+						if (!checkBoxList.get(i).isSelected()) {						
 							// process the text field only if its input is not empty
 							if (upcFieldList.get(i).getText().trim().length() != 0 ) {
 								//&& quantityFieldList.get(i).getText().trim().length() !=0 ) {
 
 								upcString = upcFieldList.get(i).getText().trim();
 								upcInt = Integer.parseInt(upcString);
-								title = clerkModel.queryTitle(upcInt);
+								
 								//
 								// check for the validity of user input
 								if (!validateItemUPC(upcInt)) {//upc not valid
@@ -109,6 +115,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 									popUpErrorMessage(message);
 									upcFieldList.get(i).setText("");
 									quantityFieldList.get(i).setText("");
+									break itemLoop; //jump out of the for loop
 								} else if ( validateItemUPC(upcInt) 
 										   && quantityFieldList.get(i).getText().trim().length() !=0) {
 									// if upc is valid and quantity field is not empty
@@ -120,16 +127,19 @@ public class ClerkController implements ActionListener, ExceptionListener {
 												+ clerkModel.queryItemQuantity(upcInt);
 										popUpErrorMessage(message);
 										quantityFieldList.get(i).setText("");
+										break itemLoop;
 									} else { 
 										// update the receipt only if both upc and quantity are valid
 										unitPrice = clerkModel.queryItemPrice(upcInt);
+										title = clerkModel.queryTitle(upcInt);
 										subtotal = quantity*unitPrice;
 										totalAmount += subtotal;
 										totalQuantity += quantity;
 										String fieldValues[] = {upcString, title, 
 												String.valueOf(quantity),
 												String.valueOf(unitPrice),
-												String.valueOf(subtotal)};
+												numberFormatter.format(subtotal)};
+										//System.out.println("title = " + title);
 										dialogHelper.addOneRowToPanel(receiptPanel, fieldValues);
 									}
 								} 
@@ -141,13 +151,14 @@ public class ClerkController implements ActionListener, ExceptionListener {
 					String blanks[] = {"  ",  "  ",  "  ",  "   ",  " " }; 
 					dialogHelper.addOneRowToPanel(receiptPanel, blanks);
 					
+
 					// add the summary for the purchase
 					String summary[] = {
 							   "SUMMARY", 
 							    "  ", 
 					           "total quantity: " + totalQuantity, 
 					           "    ", 
-					           "total amount: " + totalAmount
+					           "total amount: " + numberFormatter.format(totalAmount)
 					           }; 
 					dialogHelper.addOneRowToPanel(receiptPanel, summary);				
 					pack(); 

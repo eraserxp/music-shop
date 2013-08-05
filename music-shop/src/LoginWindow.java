@@ -34,8 +34,10 @@ public class LoginWindow extends JDialog implements ActionListener
 		// don't allow the user to resize this window
 		setResizable(false);
 		
+		usernameField.setText("ora_w2u8");
 		// every character entered in the password field is echoed by '*'
 		passwordField.setEchoChar('*');
+		
 
 		// content pane for the login window
 		// everything is contained in this loginPane
@@ -120,7 +122,8 @@ public class LoginWindow extends JDialog implements ActionListener
 		});
 
 		// initially, place the cursor in the username text field
-		usernameField.requestFocus();	  
+		//usernameField.requestFocus();
+		passwordField.requestFocus();
 	}
 
 

@@ -55,6 +55,7 @@ public class ClerkModel {
 			while (rs.next()) {
 				title = rs.getString("title");	
 			}
+			con.commit();
 		} catch (SQLException ex) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
@@ -77,6 +78,7 @@ public class ClerkModel {
 			while (rs.next()) {
 				unitPrice = rs.getDouble("price");	
 			}
+			con.commit();
 		} catch (SQLException ex) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
@@ -99,6 +101,7 @@ public class ClerkModel {
 			while (rs.next()) {
 				title = rs.getString("title");	
 			}
+			con.commit();
 		} catch (SQLException ex) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
@@ -126,6 +129,7 @@ public class ClerkModel {
 			while (rs.next()) {
 				stockQuantity = rs.getInt("stock");	
 			}
+			con.commit();
 		} catch (SQLException ex) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
@@ -151,24 +155,20 @@ public class ClerkModel {
 			while (rs.next()) {
 				nextReceiptID = rs.getInt(1);	
 			}
-			
+			con.commit();
 			stmt.executeQuery(decrementByOne);
+			con.commit();
 			stmt.executeQuery(resetToOriginal);
+			con.commit();
 			stmt.executeQuery(incrementByOne);
-			//execute several sql statement as batch
-//			stmt.addBatch(decrementByOne);
-//			stmt.addBatch(resetToOriginal);
-//			stmt.addBatch(incrementByOne);
-//			stmt.addBatch(getNext);
-//			stmt.executeBatch();
-//			con.commit();
+			con.commit();
 		} catch (SQLException ex) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
 			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
 			fireExceptionGenerated(event);
 		}
-		return nextReceiptID + 1;
+		return nextReceiptID;
 	}
 	/******************************************************************************
 	 * Below are the methods to add and remove ExceptionListeners.

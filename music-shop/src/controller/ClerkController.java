@@ -102,6 +102,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 							               "subtotal"};
 					// add the field names as the first row 
 					dialogHelper.addOneRowToPanel(receiptPanel, fieldNames);
+
 					// show upc, title, quantity, unit price and subtotal for each item
 					itemLoop:
 					for (int i=0; i<upcFieldList.size(); ++i) {
@@ -122,6 +123,15 @@ public class ClerkController implements ActionListener, ExceptionListener {
 									break itemLoop; //jump out of the for loop
 								} else if ( validateItemUPC(upcInt) 
 										   && quantityFieldList.get(i).getText().trim().length() !=0) {
+									// if the upc already exist in previous items
+									if (fieldValueAlreadyExist(upcFieldList, i)) {
+										String message = "The item with UPC: "+ upcInt 
+												+ " already exist in purchase.\n"
+												+ "Please update the quantity of the existing item.";
+										upcFieldList.get(i).setText("");
+										confirmPurchase.setSelected(false);
+										popUpErrorMessage(message);
+									}
 									// if upc is valid and quantity field is not empty
 									quantity=Integer.parseInt(quantityFieldList.get(i).getText().trim());
 									if (!validateInputQuantity(upcInt, quantity)) { 
@@ -150,6 +160,8 @@ public class ClerkController implements ActionListener, ExceptionListener {
 						}
 					} // end of for loop
 					
+
+					
 					// add a blank line
 					String blanks[] = {"  ",  "  ",  "  ",  "   ",  " " }; 
 					dialogHelper.addOneRowToPanel(receiptPanel, blanks);
@@ -163,7 +175,8 @@ public class ClerkController implements ActionListener, ExceptionListener {
 					           "    ", 
 					           "total amount: " + numberFormatter.format(totalAmount)
 					           }; 
-					dialogHelper.addOneRowToPanel(receiptPanel, summary);				
+					dialogHelper.addOneRowToPanel(receiptPanel, summary);	
+					receiptPanel.repaint();
 					pack(); 
 				}
 				
@@ -323,16 +336,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			// TODO Auto-generated method stub			
 		}
 		
-		private boolean validateItemUPC(int upc) { 
-			return clerkModel.isUPCValid(upc);
-		}
-		
-		private boolean validateInputQuantity(int upc, int quantity) {
-			return clerkModel.queryItemQuantity(upc) >= quantity &&
-					quantity >=1;
-		}
-		
-		
+		// create a pop up window showing the error message
 		private void popUpErrorMessage(String message) {
 			Toolkit.getDefaultToolkit().beep();
 			// display a popup to inform the user of the validation error
@@ -386,6 +390,38 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			//TODO
 			return; 
 		}
+	}
+	
+	private boolean validateItemUPC(int upc) { 
+		return clerkModel.isUPCValid(upc);
+	}
+	
+	private boolean validateInputQuantity(int upc, int quantity) {
+		return clerkModel.queryItemQuantity(upc) >= quantity &&
+				quantity >=1;
+	}
+	
+	/* given a list of text fields and find out whether the corresponding value for
+	 * the text field with index = excludeIndex already exist in other text fields.
+	 * I use this function to check whether new entered item with a particular upc
+	 * has already existed in the item list. Therefore, we can use it to guarantee 
+	 * that all the UPCs are distinct
+	 */
+	private boolean fieldValueAlreadyExist(ArrayList<JTextField> upcFieldList, 
+			                                int excludeIndex) {
+		// we want to check whether this upc has already existed in the list or not
+		int upcToBeChecked = Integer.parseInt(upcFieldList.get(excludeIndex).getText().trim());
+		ArrayList<Integer> otherUPCs = new ArrayList<Integer>();
+		for (int i=0; i<upcFieldList.size(); ++i) {
+			if (i!=excludeIndex && upcFieldList.get(i).isEnabled()
+				&& upcFieldList.get(i).getText().trim().length() != 0
+				) {
+				otherUPCs.add(
+				 Integer.parseInt(upcFieldList.get(i).getText().trim() )
+				);
+			}
+		}
+		return otherUPCs.contains(upcToBeChecked);
 	}
 	
 }

@@ -1,11 +1,16 @@
+package view;
 
-
+import controller.*;
 
 import java.awt.*;
 import java.awt.event.*;
 
 import javax.swing.*;
 import javax.swing.border.*;
+
+import controller.ClerkController;
+import controller.CustomerController;
+import controller.ManagerController;
 
 
 /**

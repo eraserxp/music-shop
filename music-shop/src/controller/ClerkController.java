@@ -1,8 +1,17 @@
+package controller;
+import gui_helper.DialogHelper;
+import model.ClerkModel;
+
 import java.awt.*;
 import java.awt.event.*;
 
 import javax.swing.*;
 import javax.swing.border.*; 
+
+import subject_observer.ExceptionEvent;
+import subject_observer.ExceptionListener;
+import view.ShopGUI;
+
 
 
 import java.sql.*;
@@ -46,18 +55,17 @@ public class ClerkController implements ActionListener, ExceptionListener {
 		private JTextField quantityField = new JTextField(4);
 		private JCheckBox removeItem = new JCheckBox("remove");
 		private ArrayList<JCheckBox> checkBoxList = new ArrayList<JCheckBox>();
-		private int upc_last; // to save the last upc entered;
 		
 		// constructor
 		public ProcessPurchaseDialog(ShopGUI shopGUI) {
-			//TODO
 			super(shopGUI, "Process purchase", true);
 			//setResizable(false);
 			
 			JPanel contentPane = new JPanel(new BorderLayout());
 			setContentPane(contentPane);
 			contentPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-			// create the input panel to hold the add-more-item button and the item panel
+			// create the input panel to hold the add-more-item button, the item panel
+			// and the confirm purchase checkbox
 			JPanel inputPanel = new JPanel(new BorderLayout());
 			// create the panel to hold the purchase items
 			final JPanel itemPanel = dialogHelper.createInputPane("Purchase items");
@@ -70,6 +78,8 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			JPanel buttonPanel = new JPanel();
 			buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
 			buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 2));
+			
+			final JCheckBox confirmPurchase = new JCheckBox("Confirm purchase");
 			
 			// an inner class to listen for the changes in the text field and 
 			// update the receipt
@@ -100,12 +110,9 @@ public class ClerkController implements ActionListener, ExceptionListener {
 						if (!checkBoxList.get(i).isSelected()) {						
 							// process the text field only if its input is not empty
 							if (upcFieldList.get(i).getText().trim().length() != 0 ) {
-								//&& quantityFieldList.get(i).getText().trim().length() !=0 ) {
-
 								upcString = upcFieldList.get(i).getText().trim();
 								upcInt = Integer.parseInt(upcString);
 								
-								//
 								// check for the validity of user input
 								if (!validateItemUPC(upcInt)) {//upc not valid
 									String message = "Invalid UPC:"+ upcString + " !";
@@ -136,7 +143,6 @@ public class ClerkController implements ActionListener, ExceptionListener {
 												String.valueOf(quantity),
 												String.valueOf(unitPrice),
 												numberFormatter.format(subtotal)};
-										//System.out.println("title = " + title);
 										dialogHelper.addOneRowToPanel(receiptPanel, fieldValues);
 									}
 								} 
@@ -150,7 +156,6 @@ public class ClerkController implements ActionListener, ExceptionListener {
 					
 
 					// add the summary for the purchase
-					//int = 
 					String summary[] = {
 							   "SUMMARY", 
 							    "receipt id: " + clerkModel.getNextReceiptID(), 
@@ -175,7 +180,6 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			class RemoveItemListener implements ItemListener {
 				@Override
 				public void itemStateChanged(ItemEvent ie) {
-					// TODO Auto-generated method stub
 					// check all the checkbox to see which are selected
 					// and update the status for the corresponding text fields
 					for (int i=0; i<checkBoxList.size(); ++i) {
@@ -194,8 +198,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 						//updateReceipt.regenerateReceipt();
 					}
 					
-					
-					
+									
 				}
 				
 			} // end of class RemoveItemListener
@@ -214,6 +217,8 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			// register itemUPC and quantity field to update the receipt
 			upcField.addActionListener(updateReceipt);
 			quantityField.addActionListener(updateReceipt);
+			
+			
 			
 			removeItem.addItemListener(removeItemListener);
 			removeItem.addActionListener(updateReceipt);
@@ -236,7 +241,10 @@ public class ClerkController implements ActionListener, ExceptionListener {
 					checkBoxList.add(removeItem);
 					// register itemUPC and quantity field to update the receipt
 					upcField.addActionListener(updateReceipt);
-					quantityField.addActionListener(updateReceipt);					
+					quantityField.addActionListener(updateReceipt);	
+					// to unselect the confirm purchase checkbox
+					upcField.addFocusListener(new UnSelectCheckBox(confirmPurchase));
+					quantityField.addFocusListener(new UnSelectCheckBox(confirmPurchase));
 					removeItem.addItemListener(removeItemListener);
 					removeItem.addActionListener(updateReceipt);
 					// add itemUPC and quantity text fields as a row
@@ -251,7 +259,6 @@ public class ClerkController implements ActionListener, ExceptionListener {
 									
 			final JButton OKButton = new JButton("OK");
 			OKButton.setEnabled(false);
-			//OKButton.addActionListener(updateReceipt);
 			JButton cancelButton = new JButton("Cancel");
 			OKButton.addActionListener(this);
 			cancelButton.addActionListener(new ActionListener()
@@ -262,22 +269,32 @@ public class ClerkController implements ActionListener, ExceptionListener {
 				}
 			});
 			
-			JCheckBox confirmPurchase = new JCheckBox("Confirm purchase");
+	
 			// once the confirm purchase is selected, update the receipt automatically
 			confirmPurchase.addActionListener(updateReceipt);
 			// if the confirm button is not selected, disable the OK button
 			// otherwise, enable the OK button
-			confirmPurchase.addItemListener(new ItemListener() {
-				
+			confirmPurchase.addItemListener(new ItemListener() {				
 				@Override
 				public void itemStateChanged(ItemEvent ie) {
-					// TODO Auto-generated method stub
 					JCheckBox cb = (JCheckBox) ie.getSource();
 					if (cb.isSelected()) {
 						OKButton.setEnabled(true);
 					} else {
 						OKButton.setEnabled(false);
 					}
+				}
+			});
+			
+			upcField.addFocusListener(new UnSelectCheckBox(confirmPurchase));
+			quantityField.addFocusListener(new UnSelectCheckBox(confirmPurchase));
+			
+			
+			// when you click add more item button, the confirm purchase checkbox is unselected
+			btnAdd.addActionListener(new ActionListener() {				
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					confirmPurchase.setSelected(false);						
 				}
 			});
 			
@@ -372,3 +389,24 @@ public class ClerkController implements ActionListener, ExceptionListener {
 	}
 	
 }
+
+
+
+
+// create a focus listener to unselect the input checkbox
+class UnSelectCheckBox implements FocusListener {
+	JCheckBox checkbox; 
+	public UnSelectCheckBox(JCheckBox cb) {
+		super();
+		checkbox = cb;
+	}
+	@Override
+	public void focusLost(FocusEvent arg0) {
+		//checkbox.setSelected(false);						
+	}
+	
+	@Override
+	public void focusGained(FocusEvent arg0) {
+		checkbox.setSelected(false);						
+	}				
+}; // end of class UnSelectConfirmCheckBox

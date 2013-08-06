@@ -1,6 +1,14 @@
+package model;
+import subject_observer.*;
+
 import java.sql.*; 
 
 import javax.swing.event.EventListenerList;
+
+import database.MyOracleConnection;
+
+import subject_observer.ExceptionEvent;
+import subject_observer.ExceptionListener;
 
 
 

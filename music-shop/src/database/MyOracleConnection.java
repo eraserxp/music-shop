@@ -1,3 +1,4 @@
+package database;
 // This code is adapted from the optional swing tutorial given by the instructor.
 // And we made some modifications on it.
 

@@ -1,10 +1,18 @@
+package controller;
+
 import java.awt.*;
 import java.awt.event.*;
 
 import javax.swing.*;
 import javax.swing.border.*; 
 
+import model.CustomerModel;
+
 import org.omg.CORBA.portable.CustomValue;
+
+import subject_observer.ExceptionEvent;
+import subject_observer.ExceptionListener;
+import view.ShopGUI;
 
 import java.sql.*;
 

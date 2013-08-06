@@ -1,6 +1,10 @@
+package view;
 // This code is based on the branch.java code given in JDBC tutorial 1
 
 import javax.swing.*;
+
+import database.MyOracleConnection;
+
 import java.awt.*;
 import java.awt.event.*;
 

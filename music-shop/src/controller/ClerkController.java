@@ -1,5 +1,5 @@
 package controller;
-import gui_helper.DialogHelper;
+import gui_helper.*;
 import model.ClerkModel;
 
 import java.awt.*;
@@ -393,20 +393,3 @@ public class ClerkController implements ActionListener, ExceptionListener {
 
 
 
-// create a focus listener to unselect the input checkbox
-class UnSelectCheckBox implements FocusListener {
-	JCheckBox checkbox; 
-	public UnSelectCheckBox(JCheckBox cb) {
-		super();
-		checkbox = cb;
-	}
-	@Override
-	public void focusLost(FocusEvent arg0) {
-		//checkbox.setSelected(false);						
-	}
-	
-	@Override
-	public void focusGained(FocusEvent arg0) {
-		checkbox.setSelected(false);						
-	}				
-}; // end of class UnSelectConfirmCheckBox

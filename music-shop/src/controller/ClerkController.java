@@ -64,9 +64,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			JPanel contentPane = new JPanel(new BorderLayout());
 			setContentPane(contentPane);
 			contentPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-			// create the input panel to hold the add-more-item button, the item panel
-			// and the confirm purchase checkbox
-			JPanel inputPanel = new JPanel(new BorderLayout());
+			
 			// create the panel to hold the purchase items
 			final JPanel itemPanel = dialogHelper.createInputPane("Purchase items");
 			// create the panel to output the receipt
@@ -230,9 +228,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			// register itemUPC and quantity field to update the receipt
 			upcField.addActionListener(updateReceipt);
 			quantityField.addActionListener(updateReceipt);
-			
-			
-			
+						
 			removeItem.addItemListener(removeItemListener);
 			removeItem.addActionListener(updateReceipt);
 			
@@ -314,9 +310,24 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			// add the OK and cancel buttons to the button panel
 			dialogHelper.addComponentsToPanel(buttonPanel, OKButton, cancelButton);
 			
-			inputPanel.add(btnAdd, BorderLayout.NORTH);
-			inputPanel.add(itemPanel,BorderLayout.CENTER);
-			inputPanel.add(confirmPurchase, BorderLayout.SOUTH);
+			
+			JPanel inputPanel = new JPanel();
+			inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.Y_AXIS) );
+			inputPanel.add(itemPanel);
+			JPanel addAndConfirmPanel = new JPanel(new BorderLayout());
+			addAndConfirmPanel.setBorder(new EmptyBorder(5, 5, 25, 5));
+			
+			addAndConfirmPanel.add(btnAdd, BorderLayout.WEST);
+			addAndConfirmPanel.add(confirmPurchase, BorderLayout.EAST);
+			inputPanel.add(addAndConfirmPanel);
+			
+			JPanel paymentPanel = dialogHelper.createInputPane("Payment");
+			JTextField cardNumberField = new JTextField(12);
+			JTextField expiryDateField = new JTextField(10);
+			dialogHelper.addComponentsToPanel(paymentPanel, "card number", cardNumberField);
+			dialogHelper.addComponentsToPanel(paymentPanel, "expiry date", expiryDateField);
+			
+			inputPanel.add(paymentPanel);
 			
 			contentPane.add(inputPanel, BorderLayout.CENTER);
 			contentPane.add(buttonPanel, BorderLayout.SOUTH);

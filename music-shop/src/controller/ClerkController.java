@@ -238,9 +238,6 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			removeItem.addItemListener(removeItemListener);
 			removeItem.addActionListener(updateReceipt);
 			
-			// set the action commands to mark the two fields
-			upcField.setActionCommand("upc_field_0");
-			quantityField.setActionCommand("quantity_field_0");
 			
 			// use this button to add an additional row to accept upc and quantity input
 			JButton  btnAdd = new JButton("Add more item");
@@ -351,7 +348,6 @@ public class ClerkController implements ActionListener, ExceptionListener {
 		// when the clerk press the OK button, write the purchase into database
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			// TODO Auto-generated method stub
 			ArrayList<Integer> upcList = obtainListFromFields(upcFieldList);
 			ArrayList<Integer> quantityList = obtainListFromFields(quantityFieldList);
 			String dateString = getCurrentDate("yyyy-MM-dd");
@@ -444,7 +440,11 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			ppDialog.setVisible(true);
 			return;
 		} else if (actionCommand.equals(ShopGUI.PROCESS_RETURN)) {
-			//TODO
+			mainGui.updateStatusBar("PROCESS A RETURN .......");
+			ProcessReturnDialog prDialog = new ProcessReturnDialog(mainGui);
+			prDialog.pack();
+			mainGui.centerWindow(prDialog);
+			prDialog.setVisible(true);
 			return; 
 		}
 	}

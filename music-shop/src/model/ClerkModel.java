@@ -149,8 +149,6 @@ public class ClerkModel {
 			}
 			con.commit();
 		} catch (SQLException ex) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
 			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
 			fireExceptionGenerated(event);
 		}
@@ -172,8 +170,6 @@ public class ClerkModel {
 			}
 			con.commit();
 		} catch (SQLException ex) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
 			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
 			fireExceptionGenerated(event);
 		}
@@ -195,8 +191,6 @@ public class ClerkModel {
 			}
 			con.commit();
 		} catch (SQLException ex) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
 			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
 			fireExceptionGenerated(event);
 		}
@@ -223,8 +217,6 @@ public class ClerkModel {
 			}
 			con.commit();
 		} catch (SQLException ex) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
 			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
 			fireExceptionGenerated(event);
 		}
@@ -255,8 +247,6 @@ public class ClerkModel {
 			stmt.executeQuery(incrementByOne);
 			con.commit();
 		} catch (SQLException ex) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
 			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
 			fireExceptionGenerated(event);
 		}
@@ -273,9 +263,9 @@ public class ClerkModel {
 			utilDate = fm.parse(dateString);
 			java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
 			return sqlDate;
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (ParseException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
 		}
 		return null;
 	}

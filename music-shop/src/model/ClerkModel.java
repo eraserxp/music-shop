@@ -2,6 +2,9 @@ package model;
 import subject_observer.*;
 
 import java.sql.*; 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 
 import javax.swing.event.EventListenerList;
 
@@ -39,9 +42,80 @@ public class ClerkModel {
 		con = MyOracleConnection.getInstance().getConnection();
 	}
 
-	
-	public boolean processPurchase(int receiptId) {
-		return false;
+	// allow the clerk to process one purchase
+	// and add the corresponding purchaseItem
+	// dateString must be in the form "yyyy-MM-dd"
+	// expectedDate and deliveredDate also in the form "yyyy-MM-dd"
+	public boolean processPurchase(int receiptId, String dateString, Integer cid,
+                                   String cardNumber, String expiryDate, 
+                               String expectedDateString, String deliveredDateString, 
+                                 ArrayList<Integer> upcList,
+			                     ArrayList<Integer> quantityList) {
+		try {
+			// insert a tuple into the purchase table
+			ps = con.prepareStatement("insert into purchase values" 
+				                   + "(receiptID_counter.nextval, ?, ?, ?, ?, ?, ?)");
+			//ps.setInt(1, receiptId);
+			java.sql.Date date = convertStringToDate(dateString, "yyyy-MM-dd");
+			ps.setDate(1, date);
+			if (cid == null) {
+				ps.setNull(2, java.sql.Types.INTEGER);
+			} else {
+				ps.setInt(2, cid);
+			}
+			
+			if (cardNumber == null) {
+				ps.setNull(3, java.sql.Types.VARCHAR);
+			} else {
+				ps.setString(3, cardNumber);
+			}
+			
+			if (expiryDate == null) {
+				ps.setNull(4, java.sql.Types.VARCHAR);
+			} else {
+				ps.setString(4, expiryDate);
+			}
+			
+			if (expectedDateString==null) {
+				ps.setNull(5, java.sql.Types.DATE);
+			} else {
+				java.sql.Date expectedDate = convertStringToDate(expectedDateString, "yyyy-MM-dd");
+				ps.setDate(5, expectedDate);
+			}
+			
+			if (deliveredDateString==null) {
+				ps.setNull(6, java.sql.Types.DATE);
+			} else {
+				java.sql.Date deliveredDate = convertStringToDate(deliveredDateString, "yyyy-MM-dd");
+				ps.setDate(6, deliveredDate);
+			}
+			ps.executeUpdate();
+			// insert the corresponding purchaseItem tuples
+			ps = con.prepareStatement("insert into PurchaseItem values (?, ?, ?)");
+			for (int i=0; i<upcList.size(); ++i) {
+				int upc = upcList.get(i);
+				int quantity = quantityList.get(i);
+				ps.setInt(1, receiptId);
+				ps.setInt(2, upc);
+				ps.setInt(3, quantity);
+				ps.executeUpdate();
+			}
+			// commit as one transaction
+			con.commit();
+			return true;
+		} catch (SQLException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+
+			try{
+				con.rollback();
+				return false; 
+			} catch (SQLException ex2) {
+				event = new ExceptionEvent(this, ex2.getMessage());
+				fireExceptionGenerated(event);
+				return false; 
+			}
+		}
 		
 	}
 	
@@ -49,6 +123,7 @@ public class ClerkModel {
 		return false;
 		
 	}
+	
 	
 	// obtain the title given the item UPC
 	public String queryTitle(int itemUPC) {
@@ -178,6 +253,25 @@ public class ClerkModel {
 		}
 		return nextReceiptID;
 	}
+	
+	
+
+	// convert a date string in format to a sql date
+	public java.sql.Date convertStringToDate(String dateString, String format) {
+		SimpleDateFormat fm = new SimpleDateFormat(format);
+		java.util.Date utilDate;
+		try {
+			utilDate = fm.parse(dateString);
+			java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
+			return sqlDate;
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	
 	/******************************************************************************
 	 * Below are the methods to add and remove ExceptionListeners.
 	 * 

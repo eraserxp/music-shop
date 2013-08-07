@@ -11,10 +11,6 @@ drop sequence cid_counter;
 drop sequence receiptID_counter;
 drop sequence retid_counter;
 
-drop View CustomerSelectItem;
-drop View CustomerAccount;
-drop View ItemContent;
-
 create table Item(
 	upc int not null,
 	title varchar(50) not null,
@@ -55,23 +51,23 @@ create table Customer(
 	cphone int not null,
 	PRIMARY KEY (cid)
 	);
-
+	
 create sequence receiptID_counter
 start with 1
 increment by 1;
-
+	
 create table Purchase(
 	receiptID int not null,
 	Pdate varchar(20) not null,
 	cid  int,
-	cardN int ,
-	expiryDate date ,
+	cardN varchar(16) ,
+	expiryDate varchar(10) ,
 	expectedDate date ,
 	deliveredDate date,
 	PRIMARY KEY (receiptID),
 	FOREIGN KEY (cid) references Customer
 	);
-
+	
 
 create table PurchaseItem(
 	receiptID int not null ,
@@ -81,11 +77,11 @@ create table PurchaseItem(
 	FOREIGN KEY (upc) references Item,
 	FOREIGN KEY (receiptID) references Purchase
 	);
-
+	
 create sequence retid_counter
 start with 1
 increment by 1;
-
+	
 create table Return(
 	retid int not null,
 	redate date not null,
@@ -93,8 +89,8 @@ create table Return(
 	PRIMARY KEY (retid),
 	FOREIGN KEY (receiptID) references Purchase
 	);
-
-
+	
+	
 create table ReturnItem(
 	retid int not null ,
 	upc int not null ,
@@ -183,10 +179,10 @@ insert into Customer
 values(cid_counter.nextval, 'cpw', 'Chandler Bing', '1205 Main Mall', 6048225555);
 
 insert into Purchase
-values(receiptID_counter.nextval, '2013-08-01', null, 1234123412341234, '2014-01-01', null, null);	
+values(receiptID_counter.nextval, '2013-08-01', null, '1234123412341234', '2014-01', null, null);	
 insert into PurchaseItem
 values(receiptID_counter.currval, 11111, 1);
-
+	
 insert into Purchase
 values(receiptID_counter.nextval, '2013-08-02', null, null, null, null, null);	
 insert into PurchaseItem
@@ -195,7 +191,7 @@ insert into PurchaseItem
 values(receiptID_counter.currval, 11112, 1);	
 
 insert into Purchase
-values(receiptID_counter.nextval, '2013-07-02', 4, 1234123412341111, '2014-03-03', '2013-07-06',  '2013-07-05');	
+values(receiptID_counter.nextval, '2013-07-02', 4, '1234123412341111', '2014-03', '2013-07-06',  '2013-07-05');	
 insert into PurchaseItem
 values(receiptID_counter.currval, 11112, 2);		
 insert into PurchaseItem
@@ -204,7 +200,7 @@ insert into PurchaseItem
 values(receiptID_counter.currval, 11113, 1);
 
 insert into Purchase
-values(receiptID_counter.nextval, '2013-08-01', null, 1234123412341222, '2015-01-01', null, null);	
+values(receiptID_counter.nextval, '2013-08-01', null, '1234123412341222', '2015-01', null, null);	
 insert into PurchaseItem
 values(receiptID_counter.currval, 11111, 1);	
 insert into PurchaseItem
@@ -235,7 +231,7 @@ values(receiptID_counter.currval,  11113, 1);
 insert into PurchaseItem
 values(receiptID_counter.currval,  11115, 1);
 
-
+	
 insert into Return
 values(retid_counter.nextval, '2013-07-22', 2);
 insert into ReturnItem
@@ -250,26 +246,3 @@ insert into Return
 values(retid_counter.nextval,'2013-08-05', 4);
 insert into ReturnItem
 values(retid_counter.currval, 11111, 1);
-
-
-Create View CustomerSelectItem As 
-	select title, type, category, company, year, price From Item
-	where stock > 0;
-
-Create View ItemContent (Title, SongTitle, Singer) As 
-	select Item.title, HasSong.title, LeadSinger.name from HasSong, Item, LeadSinger
-	where HasSong.upc = Item.upc and LeadSinger.upc = item.upc;
-
-
-Create View CustomerAccount (
-cid,
-cpassword,
-cname, 
-caddress,
-cphone)
-As select cid,
-cpassword,
-cname, 
-caddress,
-cphone From Customer;
-

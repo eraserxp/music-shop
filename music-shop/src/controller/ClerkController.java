@@ -13,9 +13,10 @@ import subject_observer.ExceptionListener;
 import view.ShopGUI;
 
 
-
+import java.util.Date;
 import java.sql.*;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 
@@ -55,6 +56,9 @@ public class ClerkController implements ActionListener, ExceptionListener {
 		private JTextField quantityField = new JTextField(4);
 		private JCheckBox removeItem = new JCheckBox("remove");
 		private ArrayList<JCheckBox> checkBoxList = new ArrayList<JCheckBox>();
+		int receiptId;
+		JTextField cardNumberField; 
+		JTextField expiryDateField;
 		
 		// constructor
 		public ProcessPurchaseDialog(ShopGUI shopGUI) {
@@ -322,10 +326,10 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			inputPanel.add(addAndConfirmPanel);
 			
 			JPanel paymentPanel = dialogHelper.createInputPane("Payment");
-			JTextField cardNumberField = new JTextField(12);
-			JTextField expiryDateField = new JTextField(10);
-			dialogHelper.addComponentsToPanel(paymentPanel, "card number", cardNumberField);
-			dialogHelper.addComponentsToPanel(paymentPanel, "expiry date", expiryDateField);
+			cardNumberField = new JTextField(12);
+			expiryDateField = new JTextField(10);
+			dialogHelper.addComponentsToPanel(paymentPanel, "card number (16-digits)", cardNumberField);
+			dialogHelper.addComponentsToPanel(paymentPanel, "expiry date (yyyy-mm)", expiryDateField);
 			
 			inputPanel.add(paymentPanel);
 			
@@ -342,9 +346,39 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			});
 		}
 		
+		// when the clerk press the OK button, write the purchase into database
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			// TODO Auto-generated method stub			
+			// TODO Auto-generated method stub
+			ArrayList<Integer> upcList = obtainListFromFields(upcFieldList);
+			ArrayList<Integer> quantityList = obtainListFromFields(quantityFieldList);
+			String dateString = getCurrentDate("yyyy-MM-dd");
+			Integer cid = null;
+			String cardNumber = null;
+			String expiryDate = null;
+			if (cardNumberField.getText().trim().length()!=0) {
+				cardNumber = cardNumberField.getText().trim();
+			}
+			if (expiryDateField.getText().trim().length()!=0) {
+				expiryDate = expiryDateField.getText().trim();
+			}
+
+			String expectedDateString = null;
+			String deliveredDateString = null;
+			receiptId = clerkModel.getNextReceiptID();
+			if (
+				clerkModel.processPurchase(receiptId, dateString, cid,
+                            cardNumber, expiryDate, 
+                            expectedDateString, deliveredDateString, 
+                            upcList, quantityList) == true 
+                ) {
+				// close the window
+				popUpErrorMessage("The purchase is successful!");
+				dispose();
+			} else {
+				popUpOKMessage("Failed to process this purchase!");
+			}
+			
 		}
 		
 		// create a pop up window showing the error message
@@ -353,6 +387,14 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			// display a popup to inform the user of the validation error
 			JOptionPane errorPopup = new JOptionPane();
 			errorPopup.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+		}
+		
+		// create a pop up window showing the OK message
+		private void popUpOKMessage(String message) {
+			Toolkit.getDefaultToolkit().beep();
+			// display a popup to inform the user of the validation error
+			JOptionPane errorPopup = new JOptionPane();
+			errorPopup.showMessageDialog(this, message, "OK", JOptionPane.INFORMATION_MESSAGE);
 		}
 		
 	}
@@ -434,6 +476,31 @@ public class ClerkController implements ActionListener, ExceptionListener {
 		}
 		return otherUPCs.contains(upcToBeChecked);
 	}
+	
+	// collect integers from all enable and non-empty fields in a list of JTextFields
+	private ArrayList<Integer> obtainListFromFields(ArrayList<JTextField> FieldList) {
+		ArrayList<Integer> fieldValueList = new ArrayList<Integer>();
+		for (int i=0; i<FieldList.size(); ++i) {
+			if (FieldList.get(i).isEnabled()
+				&& FieldList.get(i).getText().trim().length() != 0
+				) {
+				fieldValueList.add(
+				 Integer.parseInt(FieldList.get(i).getText().trim() )
+				);
+			}
+		}
+		return fieldValueList;
+	}
+	
+	// get the current date in format
+	// format is usually "yyyy-MM-dd"
+	private String getCurrentDate(String format) {
+		SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+		// get the current date
+		Date date = new Date();
+		return dateFormat.format(date);
+	}
+	
 	
 }
 

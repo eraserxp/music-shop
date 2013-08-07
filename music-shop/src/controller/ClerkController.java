@@ -28,12 +28,12 @@ import java.util.ArrayList;
 
 public class ClerkController implements ActionListener, ExceptionListener {
 
-	private ShopGUI shopGUI = null;
+	private ShopGUI mainGui = null;
 	private ClerkModel clerkModel = null;
 	private DialogHelper dialogHelper = null;
 	
-	public ClerkController(ShopGUI sg) {
-		shopGUI = sg;
+	public ClerkController(ShopGUI mainGui) {
+		this.mainGui = mainGui;
 		clerkModel = new ClerkModel();
 		// add this to the listener list of the clerk model
 		clerkModel.addExceptionListener(this);
@@ -180,6 +180,8 @@ public class ClerkController implements ActionListener, ExceptionListener {
 					dialogHelper.addOneRowToPanel(receiptPanel, summary);	
 					receiptPanel.repaint();
 					pack(); 
+					// center the process purchase dialog
+					mainGui.centerWindow(ProcessPurchaseDialog.this);
 				}
 				
 				@Override
@@ -373,29 +375,18 @@ public class ClerkController implements ActionListener, ExceptionListener {
                             upcList, quantityList) == true 
                 ) {
 				// close the window
-				popUpErrorMessage("The purchase is successful!");
+				popUpOKMessage("The purchase is successful!");
+				mainGui.updateStatusBar("Purchase operation is successful!"
+				                        + " Receipt id is " + receiptId + "\n");
 				dispose();
 			} else {
-				popUpOKMessage("Failed to process this purchase!");
+				mainGui.updateStatusBar("Purchase operation is failed!\n");
+				popUpErrorMessage("Failed to process this purchase!");
 			}
 			
 		}
 		
-		// create a pop up window showing the error message
-		private void popUpErrorMessage(String message) {
-			Toolkit.getDefaultToolkit().beep();
-			// display a popup to inform the user of the validation error
-			JOptionPane errorPopup = new JOptionPane();
-			errorPopup.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
-		}
-		
-		// create a pop up window showing the OK message
-		private void popUpOKMessage(String message) {
-			Toolkit.getDefaultToolkit().beep();
-			// display a popup to inform the user of the validation error
-			JOptionPane errorPopup = new JOptionPane();
-			errorPopup.showMessageDialog(this, message, "OK", JOptionPane.INFORMATION_MESSAGE);
-		}
+
 		
 	}
 	
@@ -420,9 +411,22 @@ public class ClerkController implements ActionListener, ExceptionListener {
 	}
 	
 	
+	// when an exception happens in the corresponding model class
+	// it writes the exception message to the status area of the main gui
 	@Override
 	public void exceptionGenerated(ExceptionEvent ex) {
-		// TODO Auto-generated method stub
+		String message = ex.getMessage();
+		// annoying beep sound
+		Toolkit.getDefaultToolkit().beep();
+
+		if (message != null)
+		{	
+			mainGui.updateStatusBar(ex.getMessage());
+		}
+		else
+		{
+			mainGui.updateStatusBar("An exception occurred!");
+		}
 		
 	}
 
@@ -433,10 +437,10 @@ public class ClerkController implements ActionListener, ExceptionListener {
 
 		// you cannot use == for string comparisons
 		if (actionCommand.equals(ShopGUI.PROCESS_PURCHASE)) {
-			//TODO
-			ProcessPurchaseDialog ppDialog = new ProcessPurchaseDialog(shopGUI);
+			mainGui.updateStatusBar("PROCESS A PURCHASE .......");
+			ProcessPurchaseDialog ppDialog = new ProcessPurchaseDialog(mainGui);
 			ppDialog.pack();
-			//mvb.centerWindow(iDialog);
+			mainGui.centerWindow(ppDialog);
 			ppDialog.setVisible(true);
 			return;
 		} else if (actionCommand.equals(ShopGUI.PROCESS_RETURN)) {
@@ -501,6 +505,22 @@ public class ClerkController implements ActionListener, ExceptionListener {
 		return dateFormat.format(date);
 	}
 	
+	// create a pop up window showing the error message
+	private void popUpErrorMessage(String message) {
+		Toolkit.getDefaultToolkit().beep();
+		// display a popup to inform the user of the validation error
+		JOptionPane errorPopup = new JOptionPane();
+		errorPopup.showMessageDialog(null, message, "Error", JOptionPane.ERROR_MESSAGE);
+	}
+	
+	// create a pop up window showing the OK message
+	private void popUpOKMessage(String message) {
+		Toolkit.getDefaultToolkit().beep();
+		// display a popup to inform the user of the validation error
+		JOptionPane errorPopup = new JOptionPane();
+		//errorPopup.showMessageDialog(this, message, "OK", JOptionPane.INFORMATION_MESSAGE);
+		errorPopup.showMessageDialog(null, message, "OK", JOptionPane.INFORMATION_MESSAGE);
+	}
 	
 }
 

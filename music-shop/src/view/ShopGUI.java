@@ -32,6 +32,12 @@ public class ShopGUI extends JFrame {
 	public static String GENERATE_DAILY_REPORT = "Generate daily report";
 	public static String SHOW_TOP_SELLING_ITEMS = "Show top selling items";
 	
+	// initial position of the main frame
+	private int framePositionX;
+	private int framePositionY;
+	
+	// initial size of main frame
+	private Rectangle frameBounds = null;
 	
 	// the text field for displaying error messages
 	private JTextArea statusField = new JTextArea(5,0);
@@ -84,6 +90,13 @@ public class ShopGUI extends JFrame {
 		
 		JLabel statusLabel = new JLabel("Status message: ");
 		contentPane.add(statusLabel, BorderLayout.NORTH);
+		
+		// center the main window
+		Dimension screenSize = getToolkit().getScreenSize();
+		frameBounds = getBounds();
+		framePositionX = (screenSize.width - frameBounds.width)/2;
+		framePositionY = (screenSize.height - frameBounds.height)/2;
+		setLocation(framePositionX, framePositionY);
 		
 		// anonymous inner class to terminate program
 		addWindowListener(new WindowAdapter() {
@@ -184,6 +197,15 @@ public class ShopGUI extends JFrame {
 		statusField.revalidate();
 	}
 	
+	/*
+	 * Places the given window approximately at the center of the screen
+	 */ 
+	public void centerWindow(Window w){
+		Rectangle winBounds = w.getBounds();
+		w.setLocation(framePositionX + (frameBounds.width - winBounds.width)/2, 
+				framePositionY + (frameBounds.height - winBounds.height)/2);
+	}
+	
 	public static void main(String[] args) {
 		ShopGUI mainGui = new ShopGUI();
 
@@ -205,7 +227,8 @@ public class ShopGUI extends JFrame {
 		// and setVisible()
 		lw.pack();
 
-		//mainGui.centerWindow(lw);
+		// center the login window
+		mainGui.centerWindow(lw);
 
 		lw.setVisible(true); 
 	}

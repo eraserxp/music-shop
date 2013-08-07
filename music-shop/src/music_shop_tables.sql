@@ -11,6 +11,10 @@ drop sequence cid_counter;
 drop sequence receiptID_counter;
 drop sequence retid_counter;
 
+drop View CustomerSelectItem;
+drop View CustomerAccount;
+drop View ItemContent;
+
 create table Item(
 	upc int not null,
 	title varchar(50) not null,
@@ -51,11 +55,11 @@ create table Customer(
 	cphone int not null,
 	PRIMARY KEY (cid)
 	);
-	
+
 create sequence receiptID_counter
 start with 1
 increment by 1;
-	
+
 create table Purchase(
 	receiptID int not null,
 	Pdate varchar(20) not null,
@@ -67,7 +71,7 @@ create table Purchase(
 	PRIMARY KEY (receiptID),
 	FOREIGN KEY (cid) references Customer
 	);
-	
+
 
 create table PurchaseItem(
 	receiptID int not null ,
@@ -77,11 +81,11 @@ create table PurchaseItem(
 	FOREIGN KEY (upc) references Item,
 	FOREIGN KEY (receiptID) references Purchase
 	);
-	
+
 create sequence retid_counter
 start with 1
 increment by 1;
-	
+
 create table Return(
 	retid int not null,
 	redate date not null,
@@ -89,8 +93,8 @@ create table Return(
 	PRIMARY KEY (retid),
 	FOREIGN KEY (receiptID) references Purchase
 	);
-	
-	
+
+
 create table ReturnItem(
 	retid int not null ,
 	upc int not null ,
@@ -182,7 +186,7 @@ insert into Purchase
 values(receiptID_counter.nextval, '2013-08-01', null, 1234123412341234, '2014-01-01', null, null);	
 insert into PurchaseItem
 values(receiptID_counter.currval, 11111, 1);
-	
+
 insert into Purchase
 values(receiptID_counter.nextval, '2013-08-02', null, null, null, null, null);	
 insert into PurchaseItem
@@ -231,7 +235,7 @@ values(receiptID_counter.currval,  11113, 1);
 insert into PurchaseItem
 values(receiptID_counter.currval,  11115, 1);
 
-	
+
 insert into Return
 values(retid_counter.nextval, '2013-07-22', 2);
 insert into ReturnItem
@@ -246,3 +250,26 @@ insert into Return
 values(retid_counter.nextval,'2013-08-05', 4);
 insert into ReturnItem
 values(retid_counter.currval, 11111, 1);
+
+
+Create View CustomerSelectItem As 
+	select title, type, category, company, year, price From Item
+	where stock > 0;
+
+Create View ItemContent (Title, SongTitle, Singer) As 
+	select Item.title, HasSong.title, LeadSinger.name from HasSong, Item, LeadSinger
+	where HasSong.upc = Item.upc and LeadSinger.upc = item.upc;
+
+
+Create View CustomerAccount (
+cid,
+cpassword,
+cname, 
+caddress,
+cphone)
+As select cid,
+cpassword,
+cname, 
+caddress,
+cphone From Customer;
+

@@ -100,6 +100,15 @@ public class ClerkModel {
 				ps.setInt(3, quantity);
 				ps.executeUpdate();
 			}
+			// update the stock for items
+			ps = con.prepareStatement("update item set stock = stock - ? where upc = ?");
+			for (int i=0; i<upcList.size(); ++i) {				
+				int upc = upcList.get(i);
+				int quantity = quantityList.get(i);
+				ps.setInt(1, quantity);
+				ps.setInt(2, upc);
+				ps.executeUpdate();	
+			}
 			// commit as one transaction
 			con.commit();
 			return true;

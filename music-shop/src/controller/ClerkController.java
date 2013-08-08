@@ -59,6 +59,8 @@ public class ClerkController implements ActionListener, ExceptionListener {
 		int receiptId;
 		JTextField cardNumberField; 
 		JTextField expiryDateField;
+		final JPanel itemPanel;
+		final JPanel receiptPanel;
 		
 		// constructor
 		public ProcessPurchaseDialog(ShopGUI shopGUI) {
@@ -70,9 +72,11 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			contentPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 			
 			// create the panel to hold the purchase items
-			final JPanel itemPanel = dialogHelper.createInputPane("Purchase items");
+			itemPanel = dialogHelper.createInputPane("Purchase items");
+			// final JPanel itemPanel = dialogHelper.createInputPane("Purchase items");
 			// create the panel to output the receipt
-			final JPanel receiptPanel = new JPanel(new BorderLayout());
+			//final JPanel receiptPanel = new JPanel(new BorderLayout());
+			receiptPanel = new JPanel(new BorderLayout());
 			receiptPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 30, 10));
 			// create the panel to hold the "add more item" button
 			//JPanel addMorePanel = new JPanel(new BorderLayout());
@@ -173,12 +177,29 @@ public class ClerkController implements ActionListener, ExceptionListener {
 					// add the summary for the purchase
 					String summary[] = {
 							   "SUMMARY", 
-							    "receipt id: " + clerkModel.getNextReceiptID(), 
+							    "receipt id: " + clerkModel.getNextReceiptID(),							    
 					           "total quantity: " + totalQuantity, 
 					           "    ", 
 					           "total amount: " + numberFormatter.format(totalAmount)
 					           }; 
-					dialogHelper.addOneRowToPanel(receiptPanel, summary);	
+					
+					dialogHelper.addOneRowToPanel(receiptPanel, summary);
+					String dateString = getCurrentDate("yyyy-MM-dd");
+					int len = cardNumberField.getText().trim().length();
+					String cardNo;
+					if (len==0) {
+						cardNo = "null";
+					} else {
+						cardNo = "***" + cardNumberField.getText().trim().substring(len-5, len);
+					}
+					String dateAndCardNo[] = {
+							"     ",
+							"date: " + dateString,
+							"      ",
+							"      ",
+							"card num: " + cardNo
+					};
+					dialogHelper.addOneRowToPanel(receiptPanel, dateAndCardNo);
 					receiptPanel.repaint();
 					pack(); 
 					// center the process purchase dialog
@@ -389,10 +410,11 @@ public class ClerkController implements ActionListener, ExceptionListener {
                             expectedDateString, deliveredDateString, 
                             upcList, quantityList) == true 
                 ) {
-				// close the window
+				
 				popUpOKMessage("The purchase is successful!");
 				mainGui.updateStatusBar("Purchase operation is successful!"
 				                        + " Receipt id is " + receiptId + "\n");
+				// close the window
 				dispose();
 			} else {
 				mainGui.updateStatusBar("Purchase operation is failed!\n");
@@ -414,15 +436,21 @@ public class ClerkController implements ActionListener, ExceptionListener {
 	class ProcessReturnDialog extends JDialog implements ActionListener {
 		private ArrayList<JTextField> returnQuantityFieldList = new ArrayList<JTextField>();
 		private JTextField returnQuantityField = new JTextField(4);
-		private JCheckBox removeItem = new JCheckBox("remove from return");
+		private JCheckBox removeItem = new JCheckBox("remove");
 		private ArrayList<JCheckBox> checkBoxList = new ArrayList<JCheckBox>();
-
+		private ArrayList<Integer> upcList = new ArrayList<Integer>();
+		private ArrayList<Double> priceList = new ArrayList<Double>();
+		private ArrayList<Integer> purchaseQuantityList = null;
+		private ArrayList<Integer> returnQuantityList = null;
 		
 		
 		public ProcessReturnDialog(ShopGUI shopGUI) {
 			//TODO
 			super(shopGUI, "Process return", true);
 			//setResizable(false);
+			final NumberFormat numberFormatter = NumberFormat.getNumberInstance();
+			numberFormatter.setMinimumFractionDigits(2);
+			numberFormatter.setMaximumFractionDigits(2);
 			
 			JPanel contentPane = new JPanel(new BorderLayout());
 			setContentPane(contentPane);
@@ -486,8 +514,12 @@ public class ClerkController implements ActionListener, ExceptionListener {
 							// remove all checkboxs and quantity text fields
 							checkBoxList = new ArrayList<JCheckBox> ();
 							returnQuantityFieldList = new ArrayList<JTextField>();
+							// clean the list
+							upcList = new ArrayList<Integer>();
+							priceList = new ArrayList<Double>();
+							purchaseQuantityList = new ArrayList<Integer>();
 							// create a table of all purchase item associated with the receipt id
-							String[] columnLabels = {"remove from return", "return quantity", 
+							String[] columnLabels = {"remove", "return quantity", 
 					                 "UPC", "title", "purchase quantity", 
 					                 "unit price"};
 							ArrayList< ArrayList<String> > rowList = new ArrayList< ArrayList<String> >();
@@ -497,13 +529,19 @@ public class ClerkController implements ActionListener, ExceptionListener {
 							try {
 								while (rs.next()) {
 									ArrayList<String> oneRow = new ArrayList<String>();
-									String upcString = Integer.toString( rs.getInt("upc") );
+									int upc = rs.getInt("upc");
+									upcList.add(upc);
+									String upcString = Integer.toString(upc );
 									oneRow.add(upcString);
 									String title = rs.getString("title");
 									oneRow.add(title);
-									String quantityString = Integer.toString(rs.getInt("quantity"));
+									int purchaseQuantity = rs.getInt("quantity");
+									purchaseQuantityList.add(purchaseQuantity);
+									String quantityString = Integer.toString(purchaseQuantity);
 									oneRow.add(quantityString);
-									String priceString = Double.toString(rs.getDouble("price") );
+									double price = rs.getDouble("price");
+									priceList.add(price);
+									String priceString = Double.toString( price );
 									oneRow.add(priceString);
 									rowList.add(oneRow);
 								}
@@ -591,14 +629,64 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			see.addItemListener(showReceiptContents);
 			
 			JPanel summaryAndDecisionPane = new JPanel(new BorderLayout());
-			JLabel summaryLabel = new JLabel("The refund amount = 0.0");
+			final JLabel summaryLabel = new JLabel("The refund amount = 0.0");
 			summaryAndDecisionPane.add(summaryLabel, BorderLayout.CENTER);
+			JCheckBox confirmReturn = new JCheckBox("confirm return");
+			summaryAndDecisionPane.add(confirmReturn, BorderLayout.NORTH);
+			
 			// buttonPane to hold the OK and Cancel buttons
 			JPanel buttonPanel = new JPanel();
 			buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
 			buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 2));
-			JButton OKButton = new JButton("OK");
+			final JButton OKButton = new JButton("OK");
+			OKButton.setEnabled(false); // disable the Ok button initially
 			JButton cancelButton = new JButton("Cancel");
+			
+			dialogHelper.addComponentsToPanel(buttonPanel, OKButton, cancelButton);
+			summaryAndDecisionPane.add(buttonPanel, BorderLayout.SOUTH);
+			contentPane.add(summaryAndDecisionPane, BorderLayout.SOUTH);
+			
+			// calculate the refund for the return and enable the OK button
+			confirmReturn.addItemListener(new ItemListener() {
+				
+				@Override
+				public void itemStateChanged(ItemEvent ie) {
+					// TODO Auto-generated method stub
+					JCheckBox cb = (JCheckBox) ie.getSource();
+					double refund = 0.0;
+					if (cb.isSelected()) {
+						returnQuantityList = obtainListFromFields(returnQuantityFieldList);						
+						for (int i=0; i<returnQuantityList.size(); ++i) {
+							// check if the return quantity is valid
+							if (returnQuantityList.get(i)> purchaseQuantityList.get(i)) {
+								popUpErrorMessage("The return quantity is not valid " +
+										    "for item with upc = " + upcList.get(i));
+								returnQuantityFieldList.get(i).setText("");
+							} else {
+								refund += returnQuantityList.get(i)*priceList.get(i);
+							}
+						}
+						String summary = "The refund is " + 
+			                      numberFormatter.format(refund) + ".";
+						int receiptId = Integer.parseInt(receiptIdField.getText().trim());
+						String cardNo = getCardNo(receiptId);
+						if (cardNo!=null) {
+							summary = summary + " The associated credit card number is " +
+									 cardNo;
+						}
+						summaryLabel.setText(summary);
+						//enable the OK button
+						OKButton.setEnabled(true);
+					} else {
+						summaryLabel.setText("The refund is 0.0");
+						//disable the OK button
+						OKButton.setEnabled(false);
+					}
+				}
+			});
+			
+			
+
 			cancelButton.addActionListener(new ActionListener()
 			{
 				public void actionPerformed(ActionEvent e)
@@ -607,9 +695,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 					mainGui.updateStatusBar("CANCEL THIS OPERATION");
 				}
 			});
-			dialogHelper.addComponentsToPanel(buttonPanel, OKButton, cancelButton);
-			summaryAndDecisionPane.add(buttonPanel, BorderLayout.SOUTH);
-			contentPane.add(summaryAndDecisionPane, BorderLayout.SOUTH);
+
 			
 			addWindowListener(new WindowAdapter() 
 			{
@@ -751,6 +837,12 @@ public class ClerkController implements ActionListener, ExceptionListener {
 		return !clerkModel.isReceiptIdOutdated(receiptId);
 	}
 	
+	// obtain the credit card number for a purchase
+	// if the payment is in cash, return null
+	private String getCardNo(int receiptId) {
+		return clerkModel.getCardNo(receiptId);
+	}
+	
 	// create a pop up window showing the error message
 	private void popUpErrorMessage(String message) {
 		Toolkit.getDefaultToolkit().beep();
@@ -761,7 +853,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 	
 	// create a pop up window showing the OK message
 	private void popUpOKMessage(String message) {
-		Toolkit.getDefaultToolkit().beep();
+		//Toolkit.getDefaultToolkit().beep();
 		// display a popup to inform the user of the validation error
 		JOptionPane errorPopup = new JOptionPane();
 		//errorPopup.showMessageDialog(this, message, "OK", JOptionPane.INFORMATION_MESSAGE);

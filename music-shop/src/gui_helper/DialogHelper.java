@@ -167,7 +167,7 @@ public class DialogHelper {
 			c.gridx = i;
 			c.gridy = rowCount2;
 			c.fill = GridBagConstraints.HORIZONTAL;
-			c.insets = new Insets(0, 0, 0, 10);
+			c.insets = new Insets(0, 0, 0, 20);
 			gb.setConstraints(fieldLabel, c);
 			inputPanel.add(fieldLabel);
 		}

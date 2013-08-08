@@ -428,6 +428,31 @@ public class ClerkModel {
 		}
 	}
 	
+	// receiptId must be existed in database
+	public String getCardNo(int receiptId) {
+		String cardNo = null;
+		try
+		{	 
+			ps = con.prepareStatement("SELECT cardN from purchase" 
+		                               + " where receiptId = ?" );
+			ps.setInt(1, receiptId);
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				cardNo = rs.getString(1);
+			}
+		}
+		catch (SQLException ex)
+		{
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+			// no need to commit or rollback since it is only a query
+			return null; 
+		}
+		
+		return cardNo;
+		
+	}
+	
 	/******************************************************************************
 	 * Below are the methods to add and remove ExceptionListeners.
 	 * 

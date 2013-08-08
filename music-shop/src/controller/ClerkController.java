@@ -435,7 +435,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 	 */
 	class ProcessReturnDialog extends JDialog implements ActionListener {
 		private ArrayList<JTextField> returnQuantityFieldList = new ArrayList<JTextField>();
-		private JTextField returnQuantityField = new JTextField(4);
+		private JTextField returnQuantityField = null;
 		private JCheckBox removeItem = new JCheckBox("remove");
 		private ArrayList<JCheckBox> checkBoxList = new ArrayList<JCheckBox>();
 		private ArrayList<Integer> upcList = new ArrayList<Integer>();
@@ -479,6 +479,24 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			contentPane.add(inputPane, BorderLayout.CENTER);
 			
 
+			JPanel summaryAndDecisionPane = new JPanel(new BorderLayout());
+			final JLabel summaryLabel = new JLabel("The refund amount = 0.0");
+			summaryAndDecisionPane.add(summaryLabel, BorderLayout.CENTER);
+			final JCheckBox confirmReturn = new JCheckBox("confirm return");
+			summaryAndDecisionPane.add(confirmReturn, BorderLayout.NORTH);
+			
+			// buttonPane to hold the OK and Cancel buttons
+			JPanel buttonPanel = new JPanel();
+			buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
+			buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 2));
+			final JButton OKButton = new JButton("OK");
+			OKButton.setEnabled(false); // disable the Ok button initially
+			JButton cancelButton = new JButton("Cancel");
+			
+			dialogHelper.addComponentsToPanel(buttonPanel, OKButton, cancelButton);
+			summaryAndDecisionPane.add(buttonPanel, BorderLayout.SOUTH);
+			contentPane.add(summaryAndDecisionPane, BorderLayout.SOUTH);
+			
 			// show the contents of the receipt
 			class ShowReceiptContents implements ActionListener, FocusListener, ItemListener {
 				
@@ -549,7 +567,24 @@ public class ClerkController implements ActionListener, ExceptionListener {
 								// create the corresponding checkbox and text field for each row
 								for (int i=0; i<rowList.size(); ++i) {
 									returnQuantityField = new JTextField(4);
+									// when you click the field, unselect the confirm return checkbox
+									returnQuantityField.addFocusListener(new UnSelectCheckBox(confirmReturn));
 									removeItem = new JCheckBox();
+									// when the checkbox is selected, disable the return quantity field
+									removeItem.addItemListener(new DisableTextField(returnQuantityField));
+									// and unselect the confirm return checkbox
+									// otherwise enable the field
+									removeItem.addItemListener(new ItemListener() {										
+										@Override
+										public void itemStateChanged(ItemEvent e) {
+											// TODO Auto-generated method stub
+											JCheckBox cb = (JCheckBox) e.getSource();
+											if (cb.isSelected()) {
+												confirmReturn.setSelected(false);
+											} 
+										}
+									});
+									
 									returnQuantityFieldList.add(returnQuantityField);
 									checkBoxList.add(removeItem);
 									//removeItem.
@@ -609,8 +644,38 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			
 			ShowReceiptContents showReceiptContents = new ShowReceiptContents();
 			
+
+			
+			see.addItemListener(showReceiptContents);
+
+			
+
+			
+			// when the see checkbox is unselected, disable the return quantity box
+			// and the confirm return checkbox
+			see.addItemListener(new ItemListener() {				
+				@Override
+				public void itemStateChanged(ItemEvent ie) {
+					// TODO Auto-generated method stub
+					JCheckBox cb = (JCheckBox) ie.getSource();
+					if (!cb.isSelected()) {
+						for (int i=0; i<returnQuantityFieldList.size(); ++i) {
+							returnQuantityFieldList.get(i).setEnabled(false);
+						}
+						confirmReturn.setEnabled(false);
+					} else {
+						for (int i=0; i<returnQuantityFieldList.size(); ++i) {
+							returnQuantityFieldList.get(i).setEnabled(true);
+						}
+						confirmReturn.setEnabled(true);
+					}
+				}
+			});
+			
 			// when you press enter in receipt id text field, check the checkbox
 			// so that the receipt contents shown in the input pane will be refreshed
+			// whenever the receipt id changes, unselect the confirm return checkbox 
+			// because the vital information about the return has changed
 			receiptIdField.addActionListener(new ActionListener() {				
 				@Override
 				public void actionPerformed(ActionEvent e) {
@@ -619,32 +684,14 @@ public class ClerkController implements ActionListener, ExceptionListener {
 					if (receiptIdField.getText().trim().length()==0) {
 						see.setSelected(true);
 						see.setSelected(false);
+						confirmReturn.setSelected(false);
 					} else {
 						see.setSelected(false);
 						see.setSelected(true);
+						confirmReturn.setSelected(false);
 					}
 				}
 			});
-			
-			see.addItemListener(showReceiptContents);
-			
-			JPanel summaryAndDecisionPane = new JPanel(new BorderLayout());
-			final JLabel summaryLabel = new JLabel("The refund amount = 0.0");
-			summaryAndDecisionPane.add(summaryLabel, BorderLayout.CENTER);
-			JCheckBox confirmReturn = new JCheckBox("confirm return");
-			summaryAndDecisionPane.add(confirmReturn, BorderLayout.NORTH);
-			
-			// buttonPane to hold the OK and Cancel buttons
-			JPanel buttonPanel = new JPanel();
-			buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
-			buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 2));
-			final JButton OKButton = new JButton("OK");
-			OKButton.setEnabled(false); // disable the Ok button initially
-			JButton cancelButton = new JButton("Cancel");
-			
-			dialogHelper.addComponentsToPanel(buttonPanel, OKButton, cancelButton);
-			summaryAndDecisionPane.add(buttonPanel, BorderLayout.SOUTH);
-			contentPane.add(summaryAndDecisionPane, BorderLayout.SOUTH);
 			
 			// calculate the refund for the return and enable the OK button
 			confirmReturn.addItemListener(new ItemListener() {
@@ -667,11 +714,12 @@ public class ClerkController implements ActionListener, ExceptionListener {
 							}
 						}
 						String summary = "The refund is " + 
-			                      numberFormatter.format(refund) + ".";
+			                      numberFormatter.format(refund) + ". "
+			                      + "Return Id: " + clerkModel.getNextReturnID();
 						int receiptId = Integer.parseInt(receiptIdField.getText().trim());
 						String cardNo = getCardNo(receiptId);
 						if (cardNo!=null) {
-							summary = summary + " The associated credit card number is " +
+							summary = summary + " Credit card number: " +
 									 cardNo;
 						}
 						summaryLabel.setText(summary);
@@ -685,7 +733,52 @@ public class ClerkController implements ActionListener, ExceptionListener {
 				}
 			});
 			
-			
+			// when the OK button is pressed, process the return and write to
+			// the database
+			OKButton.addActionListener(new ActionListener() {
+				
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					// TODO Auto-generated method stub
+					ArrayList<Integer> selectedUPCs = new ArrayList<Integer>();
+					// get the upc that has been selected
+					for (int i=0; i<upcList.size(); ++i) {
+						returnQuantityField = returnQuantityFieldList.get(i);						
+						String quantityString = null;
+						int quantity = 0;
+						if (returnQuantityField.getText().trim().length()!=0) {
+							quantityString = returnQuantityField.getText().trim();
+							quantity = Integer.parseInt(quantityString);
+						}
+						
+						if (returnQuantityField.isEnabled()
+						    && (quantityString != null)	
+							&& (quantity != 0) ) {
+							selectedUPCs.add(upcList.get(i));
+						}
+					}
+					
+					int receiptId = Integer.parseInt(receiptIdField.getText().trim());
+					String dateString = getCurrentDate("yyyy-MM-dd");
+					ArrayList<Integer> returnQuantityList = obtainListFromFields(returnQuantityFieldList);
+					if (clerkModel.processReturn(receiptId, dateString, 
+			                      selectedUPCs, 
+			                      returnQuantityList)) {
+						popUpOKMessage("The return is successful!");
+						mainGui.updateStatusBar("The return is successful!");
+						receiptIdField.setText("");
+						see.setSelected(false);
+						pack();
+					} else {
+						popUpErrorMessage("The return is failed!");
+						mainGui.updateStatusBar("The return is failed!");
+						receiptIdField.setText("");
+						see.setSelected(false);
+						pack();
+					}
+					
+				}
+			});
 
 			cancelButton.addActionListener(new ActionListener()
 			{

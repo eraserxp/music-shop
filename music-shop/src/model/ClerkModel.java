@@ -133,8 +133,58 @@ public class ClerkModel {
 		
 	}
 	
-	public boolean processReturn(int receiptId, int upc, int quantity) {
-		return false;
+	public boolean processReturn(int receiptId, String dateString, 
+			                      ArrayList<Integer> upcList, 
+			                      ArrayList<Integer> returnQuantityList) {
+		try {
+			// insert the return
+			ps = con.prepareStatement("insert into return values " +
+					                 "(retid_counter.nextval, ?, ?)");
+			java.sql.Date date = convertStringToDate(dateString, "yyyy-MM-dd");
+			ps.setDate(1, date);
+			ps.setInt(2, receiptId);
+
+			
+			ps.executeUpdate();
+			
+			// insert the returnItems
+			ps = con.prepareStatement("insert into returnItem values " +
+					         "(retid_counter.currval, ?, ?)");
+			for (int i=0; i<upcList.size(); ++i) {
+				ps.setInt(1, upcList.get(i));
+				ps.setInt(2, returnQuantityList.get(i));
+				ps.executeUpdate();
+			}
+			
+			// update the quantity field of the corresponding purchaseItems
+			ps = con.prepareStatement("update purchaseItem set quantity=quantity-?" +
+					" where receiptId=? and upc = ?");
+			for (int i=0; i<upcList.size(); ++i) {
+				ps.setInt(1, returnQuantityList.get(i));
+				ps.setInt(2, receiptId);
+				ps.setInt(3, upcList.get(i));
+				ps.executeUpdate();
+			}
+			// delete those purchaseItems whose quantity = 0
+			Statement stmt = con.createStatement();
+			stmt.executeUpdate("delete from purchaseItem where quantity = 0 ");
+			con.commit();
+			return true;
+		} catch (SQLException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+
+			try{
+				con.rollback();
+				return false; 
+			} catch (SQLException ex2) {
+				event = new ExceptionEvent(this, ex2.getMessage());
+				fireExceptionGenerated(event);
+				return false; 
+			}
+		}
+		
+	
 		
 	}
 	
@@ -285,7 +335,36 @@ public class ClerkModel {
 		return nextReceiptID;
 	}
 	
-	
+
+	// obtain the next returnID and decrement it by 1 in the database
+	// so that this function will not change the nextval of the sequence
+	public int getNextReturnID() {
+		int nextReturnID = 0; 
+		ResultSet rs;
+		String getNext = "select retid_counter.nextval from dual";
+		String decrementByOne = "alter sequence retid_counter increment by -1";
+		String resetToOriginal = "select retid_counter.nextval from dual";
+		String incrementByOne = "alter sequence retid_counter increment by 1";
+		
+		try {
+			Statement stmt = con.createStatement();
+			rs = stmt.executeQuery(getNext);
+			while (rs.next()) {
+				nextReturnID = rs.getInt(1);	
+			}
+			con.commit();
+			stmt.executeQuery(decrementByOne);
+			con.commit();
+			stmt.executeQuery(resetToOriginal);
+			con.commit();
+			stmt.executeQuery(incrementByOne);
+			con.commit();
+		} catch (SQLException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+		}
+		return nextReturnID;
+	}
 
 	// convert a date string in format to a sql date
 	public java.sql.Date convertStringToDate(String dateString, String format) {

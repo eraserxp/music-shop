@@ -48,7 +48,7 @@ public class ClerkModel {
 	// and add the corresponding purchaseItem
 	// dateString must be in the form "yyyy-MM-dd"
 	// expectedDate and deliveredDate also in the form "yyyy-MM-dd"
-	public boolean processPurchase(int receiptId, String dateString, Integer cid,
+	public boolean processPurchase(int receiptId, String dateString, String cid,
                                    String cardNumber, String expiryDate, 
                                String expectedDateString, String deliveredDateString, 
                                  ArrayList<Integer> upcList,
@@ -61,9 +61,9 @@ public class ClerkModel {
 			java.sql.Date date = convertStringToDate(dateString, "yyyy-MM-dd");
 			ps.setDate(1, date);
 			if (cid == null) {
-				ps.setNull(2, java.sql.Types.INTEGER);
+				ps.setNull(2, java.sql.Types.VARCHAR);
 			} else {
-				ps.setInt(2, cid);
+				ps.setString(2, cid);
 			}
 			
 			if (cardNumber == null) {

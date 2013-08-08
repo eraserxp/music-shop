@@ -65,6 +65,57 @@ public class CustomerModel {
 		return 0;
 	}
 	
+	// query a nonempty username, if it is already existed
+	// return true, otherwise return false
+	public boolean queryUsername(String username) {
+		int count = 0; 
+		ResultSet rs = null;
+		String sqlStatement = "select count(*) from customer where cid = ?";
+		                      
+		try {
+			ps = con.prepareStatement(sqlStatement);
+			ps.setString(1,username);
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				count = rs.getInt(1);	
+			}
+			con.commit();
+		} catch (SQLException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+		} finally {
+	        try { rs.close(); } catch (Exception ignore) { }
+	    }
+		
+		if (count==0) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+	public boolean insertCustomer(String username, String password, String name, 
+			                      String address, String phone) {
+		
+		String sqlStatement = "insert into customer values (?,?,?,?,?)";
+        
+		try {
+			ps = con.prepareStatement(sqlStatement);
+			ps.setString(1,username);
+			ps.setString(2,password);
+			ps.setString(3,name);
+			ps.setString(4,address);
+			ps.setString(5,phone);
+			ps.executeUpdate();
+			con.commit();
+			return true;
+		} catch (SQLException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+			return false;
+		} 
+	}
+	
 	/******************************************************************************
 	 * Below are the methods to add and remove ExceptionListeners.
 	 * 

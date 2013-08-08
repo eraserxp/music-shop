@@ -7,7 +7,6 @@ Drop table Purchase;
 Drop table Customer;
 Drop table Item;
 
-drop sequence cid_counter;
 drop sequence receiptID_counter;
 drop sequence retid_counter;
 
@@ -39,16 +38,12 @@ create table HasSong(
 	FOREIGN KEY (upc) references Item
 	);
 
-create sequence cid_counter
-start with 1
-increment by 1;
-
 create table Customer(
-	cid int not null ,
+	cid varchar(10) not null ,
 	cpassword varchar(10) not null,
 	cname varchar(40) not null,
 	caddress varchar(60) not null,
-	cphone int not null,
+	cphone varchar(20) not null,
 	PRIMARY KEY (cid)
 	);
 	
@@ -59,7 +54,7 @@ increment by 1;
 create table Purchase(
 	receiptID int not null,
 	Pdate date not null,
-	cid  int,
+	cid  varchar(10),
 	cardN varchar(16) ,
 	expiryDate varchar(10) ,
 	expectedDate date ,
@@ -166,17 +161,17 @@ insert into HasSong
 values(11116, 'Better than New');	
 
 insert into Customer
-values(cid_counter.nextval, 'Andypw', 'Andy Lau', '1234 Main Mall', 6048221111);
+values('Andypw', '1234', 'Andy Lau', '1234 Main Mall', '6048221111');
 insert into Customer
-values(cid_counter.nextval, 'Hebepw', 'Hebe T', '1221 Main Mall', 6048220000);
+values('Hebepw', '1234', 'Hebe T', '1221 Main Mall', '6048220000');
 insert into Customer
-values(cid_counter.nextval, 'Tonypw', 'Tony Leung', '1200 Main Mall', 6048222222);
+values('Tonypw', '1234', 'Tony Leung', '1200 Main Mall', '6048222222');
 insert into Customer
-values(cid_counter.nextval, 'Jonepw', 'Jone Ross', '1200 Main Mall', 6048223333);
+values('Jonepw', '1234', 'Jone Ross', '1200 Main Mall', '6048223333');
 insert into Customer
-values(cid_counter.nextval, 'Rachelpw', 'Rachel Green', '1204 Main Mall', 6048224444);
+values('Rachelpw', '1234', 'Rachel Green', '1204 Main Mall', '6048224444');
 insert into Customer
-values(cid_counter.nextval, 'cpw', 'Chandler Bing', '1205 Main Mall', 6048225555);
+values('cpw', '1234', 'Chandler Bing', '1205 Main Mall', '6048225555');
 
 insert into Purchase
 values(receiptID_counter.nextval, '2013-08-01', null, '1234123412341234', '2014-01', null, null);	
@@ -191,7 +186,7 @@ insert into PurchaseItem
 values(receiptID_counter.currval, 11112, 1);	
 
 insert into Purchase
-values(receiptID_counter.nextval, '2013-07-02', 4, '1234123412341111', '2014-03', '2013-07-06',  '2013-07-05');	
+values(receiptID_counter.nextval, '2013-07-02', 'Rachelpw', '1234123412341111', '2014-03', '2013-07-06',  '2013-07-05');	
 insert into PurchaseItem
 values(receiptID_counter.currval, 11112, 2);		
 insert into PurchaseItem

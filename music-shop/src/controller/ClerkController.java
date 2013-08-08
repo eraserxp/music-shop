@@ -394,7 +394,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			// of text fields
 			collectNonEmptyValues(upcFieldList, quantityFieldList, upcList, quantityList);
 			String dateString = getCurrentDate("yyyy-MM-dd");
-			Integer cid = null;
+			String cid = null;
 			String cardNumber = null;
 			String expiryDate = null;
 			if (cardNumberField.getText().trim().length()!=0) {
@@ -447,9 +447,9 @@ public class ClerkController implements ActionListener, ExceptionListener {
 		private ArrayList<Integer> returnQuantityList = null;
 		
 		
-		public ProcessReturnDialog(ShopGUI shopGUI) {
+		public ProcessReturnDialog(ShopGUI mainGUI) {
 			//TODO
-			super(shopGUI, "Process return", true);
+			super(mainGUI, "Process return", true);
 			//setResizable(false);
 			final NumberFormat numberFormatter = NumberFormat.getNumberInstance();
 			numberFormatter.setMinimumFractionDigits(2);

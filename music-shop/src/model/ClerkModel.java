@@ -5,6 +5,8 @@ import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 import javax.swing.event.EventListenerList;
 
@@ -101,6 +103,8 @@ public class ClerkModel {
 				ps.executeUpdate();
 			}
 			// update the stock for items
+			// you should never delete an item even if its stock = 0 because some
+			// previous purchase may refer to it
 			ps = con.prepareStatement("update item set stock = stock - ? where upc = ?");
 			for (int i=0; i<upcList.size(); ++i) {				
 				int upc = upcList.get(i);
@@ -109,6 +113,7 @@ public class ClerkModel {
 				ps.setInt(2, upc);
 				ps.executeUpdate();	
 			}
+
 			// commit as one transaction
 			con.commit();
 			return true;
@@ -175,9 +180,9 @@ public class ClerkModel {
 		}
 		return unitPrice;
 	}
-	
-	// check whether the item UPC is valid or not
-	public boolean isUPCValid(int itemUPC) {
+
+	// find out whether a upc exist in the item list (even if its stock = 0)
+	public boolean isUPCExisted(int itemUPC) {
 		//boolean isValid = false;
 		String title = null;
 		// every item must have a non-null title 
@@ -187,7 +192,7 @@ public class ClerkModel {
 			ps.setInt(1,itemUPC);
 			ResultSet rs = ps.executeQuery();
 			while (rs.next()) {
-				title = rs.getString("title");	
+				title = rs.getString(1);	
 			}
 			con.commit();
 		} catch (SQLException ex) {
@@ -196,6 +201,33 @@ public class ClerkModel {
 		}
 
 		if (title == null) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+	// check whether the item UPC is valid or not
+	// an upc is valid if it exists in database and its corresponding stock > 0
+	public boolean isUPCValid(int itemUPC) {
+		//boolean isValid = false;
+		int stock = 0;
+		// every item must have a non-null title 
+		String sqlStatement = "select stock from Item where upc = ?";
+		try {
+			ps = con.prepareStatement(sqlStatement);
+			ps.setInt(1,itemUPC);
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				stock = rs.getInt(1);	
+			}
+			con.commit();
+		} catch (SQLException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+		}
+
+		if (stock == 0) {
 			return false;
 		} else {
 			return true;
@@ -270,6 +302,131 @@ public class ClerkModel {
 		return null;
 	}
 	
+	// check if the receiptId existed in database
+	public boolean isReceiptIdExisted(int receiptId) {
+		int count = 0;
+		try {
+			ps = con.prepareStatement(
+					"select count(*) from purchase P " +
+					" where P.receiptId = ?"
+					); 
+
+			ps.setInt(1, receiptId);
+			ResultSet rs = ps.executeQuery();
+			if (rs.next()) {
+				count =  rs.getInt(1);
+			}
+		} catch (SQLException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+			// no need to commit or rollback since it is only a query
+		}
+		
+		if (count==1) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+
+	/* valid purchase ---- there is some purchaseItems associated with it.
+	*                      If there is no purchaseItems associated with it,
+	*                      this means that all the items in this purchase
+	*                      have been returned
+	* find the valid purchase 
+	* The query should return 1 if the receiptId is OK
+	*/ 
+	public boolean isReceiptIdValid(int receiptId) {
+		int count = 0;
+		try {
+			ps = con.prepareStatement(
+					"select count(*) from purchase P" +
+					" where 0 < ( select count(*) from purchaseItem PI " +
+					" where PI.receiptId = P.receiptId) " +
+					" and P.receiptId = ?"
+					); 
+
+			ps.setInt(1, receiptId);
+			ResultSet rs = ps.executeQuery();
+			if (rs.next()) {
+				count =  rs.getInt(1);
+			}
+		} catch (SQLException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+			// no need to commit or rollback since it is only a query
+		}
+		
+		if (count==1) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	// check if a receipt id is within 15 days of its purchase date
+	// receiptId should be an existing one
+	public boolean isReceiptIdOutdated(int receiptId) {
+		int count = 0;
+		try {
+			/* valid purchase ---- there is some purchaseItems associated with it.
+			*                      If there is no purchaseItems associated with it,
+			*                      this means that all the items in this purchase
+			*                      have been returned
+			* find the valid purchase whose date is within 15 days of today
+			* The query should return 1 if the receiptId is OK
+			*/ 
+			ps = con.prepareStatement(
+					"select count(*) from purchase P" +
+					" where 15>=(select sysdate from dual) - P.pdate " +
+					" and 0 < ( select count(*) from purchaseItem PI " +
+					" where PI.receiptId = P.receiptId) " +
+					" and P.receiptId = ?"
+					); 
+
+			ps.setInt(1, receiptId);
+			ResultSet rs = ps.executeQuery();
+			if (rs.next()) {
+				count =  rs.getInt(1);
+			}
+		} catch (SQLException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+			// no need to commit or rollback since it is only a query
+		}
+		
+		if (count==1) {
+			return false;
+		} else {
+			return true;
+		}
+
+	}
+
+	
+	
+	// get the purchase items for receiptId
+	public ResultSet getPurchaseItem(int receiptId) {
+		try
+		{	 
+			ps = con.prepareStatement("SELECT I.upc, title, quantity, price" 
+		                              + " FROM Item I, purchaseItem P" 
+					 +" where I.upc = P.upc" +
+					 " and receiptId = ?" );
+			ps.setInt(1, receiptId);
+			ResultSet rs = ps.executeQuery();
+			return rs; 
+		}
+		catch (SQLException ex)
+		{
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+			// no need to commit or rollback since it is only a query
+
+			return null; 
+		}
+	}
 	
 	/******************************************************************************
 	 * Below are the methods to add and remove ExceptionListeners.

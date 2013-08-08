@@ -58,7 +58,7 @@ increment by 1;
 	
 create table Purchase(
 	receiptID int not null,
-	Pdate varchar(20) not null,
+	Pdate date not null,
 	cid  int,
 	cardN varchar(16) ,
 	expiryDate varchar(10) ,

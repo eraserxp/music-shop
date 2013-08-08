@@ -85,7 +85,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			
 			// an inner class to listen for the changes in the text field and 
 			// update the receipt
-			class UpdateReceipt implements ActionListener {
+			class UpdateReceipt implements ActionListener, FocusListener {
 				private void regenerateReceipt() {
 					receiptPanel.removeAll();
 					int upcInt;
@@ -117,13 +117,14 @@ public class ClerkController implements ActionListener, ExceptionListener {
 								upcInt = Integer.parseInt(upcString);
 								
 								// check for the validity of user input
-								if (!validateItemUPC(upcInt)) {//upc not valid
-									String message = "Invalid UPC:"+ upcString + " !";
+								if (!validateUPC(upcInt)) {//upc doesn't exist or its stock = 0
+									String message = "Invalid UPC:"+ upcString + " !\n"
+											  + "Either the upc doesn't exist or its stock = 0";
 									popUpErrorMessage(message);
 									upcFieldList.get(i).setText("");
 									quantityFieldList.get(i).setText("");
 									break itemLoop; //jump out of the for loop
-								} else if ( validateItemUPC(upcInt) 
+								} else if ( validateUPC(upcInt) 
 										   && quantityFieldList.get(i).getText().trim().length() !=0) {
 									// if the upc already exist in previous items
 									if (fieldValueAlreadyExist(upcFieldList, i)) {
@@ -189,6 +190,18 @@ public class ClerkController implements ActionListener, ExceptionListener {
 					regenerateReceipt();					
 				}
 
+				@Override
+				public void focusGained(FocusEvent arg0) {
+					regenerateReceipt();					
+				}
+
+				@Override
+				public void focusLost(FocusEvent arg0) {
+					//regenerateReceipt();
+				}
+
+
+
 			}; // end of class UpdatReceipt
 			
 			final UpdateReceipt updateReceipt = new  UpdateReceipt();
@@ -232,9 +245,11 @@ public class ClerkController implements ActionListener, ExceptionListener {
 
 			
 			// register itemUPC and quantity field to update the receipt
-			upcField.addActionListener(updateReceipt);
-			quantityField.addActionListener(updateReceipt);
-						
+			//upcField.addActionListener(updateReceipt);
+			//quantityField.addActionListener(updateReceipt);
+			upcField.addFocusListener(updateReceipt);
+			quantityField.addFocusListener(updateReceipt);
+			
 			removeItem.addItemListener(removeItemListener);
 			removeItem.addActionListener(updateReceipt);
 			
@@ -252,8 +267,10 @@ public class ClerkController implements ActionListener, ExceptionListener {
 					removeItem = new JCheckBox("remove");
 					checkBoxList.add(removeItem);
 					// register itemUPC and quantity field to update the receipt
-					upcField.addActionListener(updateReceipt);
-					quantityField.addActionListener(updateReceipt);	
+					//upcField.addActionListener(updateReceipt);
+					//quantityField.addActionListener(updateReceipt);
+					upcField.addFocusListener(updateReceipt);
+					quantityField.addFocusListener(updateReceipt);
 					// to unselect the confirm purchase checkbox
 					upcField.addFocusListener(new UnSelectCheckBox(confirmPurchase));
 					quantityField.addFocusListener(new UnSelectCheckBox(confirmPurchase));
@@ -277,6 +294,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			{
 				public void actionPerformed(ActionEvent e)
 				{
+					mainGui.updateStatusBar("CANCEL THIS OPERATION");
 					dispose();
 				}
 			});
@@ -340,6 +358,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			{
 				public void windowClosing(WindowEvent e)
 				{
+					mainGui.updateStatusBar("CANCEL THIS OPERATION");
 					dispose();
 				}
 			});
@@ -393,9 +412,214 @@ public class ClerkController implements ActionListener, ExceptionListener {
 	 *
 	 */
 	class ProcessReturnDialog extends JDialog implements ActionListener {
+		private ArrayList<JTextField> returnQuantityFieldList = new ArrayList<JTextField>();
+		private JTextField returnQuantityField = new JTextField(4);
+		private JCheckBox removeItem = new JCheckBox("remove from return");
+		private ArrayList<JCheckBox> checkBoxList = new ArrayList<JCheckBox>();
 
+		
+		
 		public ProcessReturnDialog(ShopGUI shopGUI) {
 			//TODO
+			super(shopGUI, "Process return", true);
+			//setResizable(false);
+			
+			JPanel contentPane = new JPanel(new BorderLayout());
+			setContentPane(contentPane);
+			contentPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+			// a top panel on the top of contentPane
+			JPanel topPane = new JPanel(new BorderLayout());
+
+			// a pane to hold the receipt id information			
+			JPanel receiptIdPane = new JPanel(new FlowLayout());
+			JLabel receiptIdLabel = new JLabel("Receipt id: ");
+			final JTextField receiptIdField = new JTextField(4);
+			final JCheckBox see = new JCheckBox("See the contents of the receipt");
+		
+
+			receiptIdPane.add(receiptIdLabel);
+			receiptIdPane.add(receiptIdField);
+			receiptIdPane.add(see);
+			
+			topPane.add(receiptIdPane, BorderLayout.WEST);
+			
+			contentPane.add(topPane, BorderLayout.NORTH);
+			
+			final JPanel inputPane = dialogHelper.createInputPane("Return items");
+			
+
+			contentPane.add(inputPane, BorderLayout.CENTER);
+			
+
+			// show the contents of the receipt
+			class ShowReceiptContents implements ActionListener, FocusListener, ItemListener {
+				
+				private void showContents() {
+					if (receiptIdField.getText().trim().length()!=0) {
+						int receiptId = Integer.parseInt(receiptIdField.getText().trim());
+						if (!isReceiptIdExisted(receiptId)) { 
+							// non-existing receipt id
+							popUpErrorMessage("Receipt id = " + receiptId 
+									  + " doesn't exist! " );
+							receiptIdField.setText("");
+							see.setSelected(false);
+							inputPane.removeAll();
+						} else if (!isReceiptIdValid(receiptId)) { 
+							// existing receipt id but not valid
+							popUpErrorMessage("All items associated with Receipt id = " 
+						                      + receiptId +
+									          " have already been returned.");
+							receiptIdField.setText("");
+							see.setSelected(false);
+							inputPane.removeAll();
+							
+						} else if (!eligibleForReturn(receiptId)) { 
+							// the receipt id is outside the time range for return
+							popUpErrorMessage("Receipt id = " + receiptId 
+									  + " is not eligible for return!\n" +
+									  "Because it is more than 15 days old.");
+							receiptIdField.setText("");
+							// uncheck the checkbox
+							see.setSelected(false);
+							inputPane.removeAll();
+						} else {
+							// remove all checkboxs and quantity text fields
+							checkBoxList = new ArrayList<JCheckBox> ();
+							returnQuantityFieldList = new ArrayList<JTextField>();
+							// create a table of all purchase item associated with the receipt id
+							String[] columnLabels = {"remove from return", "return quantity", 
+					                 "UPC", "title", "purchase quantity", 
+					                 "unit price"};
+							ArrayList< ArrayList<String> > rowList = new ArrayList< ArrayList<String> >();
+							ResultSet rs = clerkModel.getPurchaseItem(receiptId);
+							//ResultSetMetaData rsmd = rs.getMetaData();
+						
+							try {
+								while (rs.next()) {
+									ArrayList<String> oneRow = new ArrayList<String>();
+									String upcString = Integer.toString( rs.getInt("upc") );
+									oneRow.add(upcString);
+									String title = rs.getString("title");
+									oneRow.add(title);
+									String quantityString = Integer.toString(rs.getInt("quantity"));
+									oneRow.add(quantityString);
+									String priceString = Double.toString(rs.getDouble("price") );
+									oneRow.add(priceString);
+									rowList.add(oneRow);
+								}
+								
+								// create the corresponding checkbox and text field for each row
+								for (int i=0; i<rowList.size(); ++i) {
+									returnQuantityField = new JTextField(4);
+									removeItem = new JCheckBox();
+									returnQuantityFieldList.add(returnQuantityField);
+									checkBoxList.add(removeItem);
+									//removeItem.
+								}
+								
+								// add the table to the gui
+								dialogHelper.addOneTableToPanel(inputPane, columnLabels,
+					                       checkBoxList,
+					                       returnQuantityFieldList, 
+					                       rowList); 
+							} catch (SQLException ex) {
+								// TODO Auto-generated catch block
+								//e.printStackTrace();
+								mainGui.updateStatusBar(ex.getMessage());
+							} // end of try catch block
+							
+						}
+					}
+				} // end of showContents
+				
+				@Override
+				public void focusGained(FocusEvent arg0) {
+					// TODO Auto-generated method stub
+					showContents();
+					pack();					
+				}
+
+				@Override
+				public void focusLost(FocusEvent arg0) {
+					// TODO Auto-generated method stub
+					showContents();
+					pack();
+				}
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					// TODO Auto-generated method stub
+					showContents();
+					pack();
+				}
+
+				@Override
+				public void itemStateChanged(ItemEvent e) {
+					// TODO Auto-generated method stub
+					JCheckBox cb = (JCheckBox) e.getSource();
+					if (cb.isSelected()) {
+						showContents();
+						pack();
+					} else {
+						// clean the input pane
+						inputPane.removeAll();
+						pack();
+					}
+				}
+				
+			}
+			
+			ShowReceiptContents showReceiptContents = new ShowReceiptContents();
+			
+			// when you press enter in receipt id text field, check the checkbox
+			// so that the receipt contents shown in the input pane will be refreshed
+			receiptIdField.addActionListener(new ActionListener() {				
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					// TODO Auto-generated method stub
+					// if the receipt id field is empty, unselect the checkbox
+					if (receiptIdField.getText().trim().length()==0) {
+						see.setSelected(true);
+						see.setSelected(false);
+					} else {
+						see.setSelected(false);
+						see.setSelected(true);
+					}
+				}
+			});
+			
+			see.addItemListener(showReceiptContents);
+			
+			JPanel summaryAndDecisionPane = new JPanel(new BorderLayout());
+			JLabel summaryLabel = new JLabel("The refund amount = 0.0");
+			summaryAndDecisionPane.add(summaryLabel, BorderLayout.CENTER);
+			// buttonPane to hold the OK and Cancel buttons
+			JPanel buttonPanel = new JPanel();
+			buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
+			buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 2));
+			JButton OKButton = new JButton("OK");
+			JButton cancelButton = new JButton("Cancel");
+			cancelButton.addActionListener(new ActionListener()
+			{
+				public void actionPerformed(ActionEvent e)
+				{
+					dispose();
+					mainGui.updateStatusBar("CANCEL THIS OPERATION");
+				}
+			});
+			dialogHelper.addComponentsToPanel(buttonPanel, OKButton, cancelButton);
+			summaryAndDecisionPane.add(buttonPanel, BorderLayout.SOUTH);
+			contentPane.add(summaryAndDecisionPane, BorderLayout.SOUTH);
+			
+			addWindowListener(new WindowAdapter() 
+			{
+				public void windowClosing(WindowEvent e)
+				{
+					mainGui.updateStatusBar("CANCEL THIS OPERATION");
+					dispose();
+				}
+			});
+			
 		}
 		
 		@Override
@@ -449,8 +673,14 @@ public class ClerkController implements ActionListener, ExceptionListener {
 		}
 	}
 	
-	private boolean validateItemUPC(int upc) { 
+	// validate the upc exists and its stock > 0
+	private boolean validateUPC(int upc) { 
 		return clerkModel.isUPCValid(upc);
+	}
+	
+	// validate the existence of the upc
+	private boolean validateUPCExistence(int upc) {
+		return clerkModel.isUPCExisted(upc);
 	}
 	
 	private boolean validateInputQuantity(int upc, int quantity) {
@@ -503,6 +733,22 @@ public class ClerkController implements ActionListener, ExceptionListener {
 		// get the current date
 		Date date = new Date();
 		return dateFormat.format(date);
+	}
+	
+	// check if an receiptId exists in database
+	private boolean isReceiptIdExisted(int receiptId) {
+		return clerkModel.isReceiptIdExisted(receiptId);
+	}
+	
+	// check if an existing receiptId is valid by checking there is still some
+	// purchase item associated with it
+	private boolean isReceiptIdValid(int receiptId) {
+		return clerkModel.isReceiptIdValid(receiptId);
+	}
+	
+	// check if a valid receiptId is OK for return
+	private boolean eligibleForReturn(int receiptId) {
+		return !clerkModel.isReceiptIdOutdated(receiptId);
 	}
 	
 	// create a pop up window showing the error message

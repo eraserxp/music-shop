@@ -388,8 +388,11 @@ public class ClerkController implements ActionListener, ExceptionListener {
 		// when the clerk press the OK button, write the purchase into database
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			ArrayList<Integer> upcList = obtainListFromFields(upcFieldList);
-			ArrayList<Integer> quantityList = obtainListFromFields(quantityFieldList);
+			ArrayList<Integer> upcList = new ArrayList<Integer>();
+			ArrayList<Integer> quantityList = new ArrayList<Integer>();
+			// fill the upcList and quantityList with proper values from the two lists
+			// of text fields
+			collectNonEmptyValues(upcFieldList, quantityFieldList, upcList, quantityList);
 			String dateString = getCurrentDate("yyyy-MM-dd");
 			Integer cid = null;
 			String cardNumber = null;
@@ -436,7 +439,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 	class ProcessReturnDialog extends JDialog implements ActionListener {
 		private ArrayList<JTextField> returnQuantityFieldList = new ArrayList<JTextField>();
 		private JTextField returnQuantityField = null;
-		private JCheckBox removeItem = new JCheckBox("remove");
+		//private JCheckBox removeItem = new JCheckBox("remove");
 		private ArrayList<JCheckBox> checkBoxList = new ArrayList<JCheckBox>();
 		private ArrayList<Integer> upcList = new ArrayList<Integer>();
 		private ArrayList<Double> priceList = new ArrayList<Double>();
@@ -530,14 +533,14 @@ public class ClerkController implements ActionListener, ExceptionListener {
 							inputPane.removeAll();
 						} else {
 							// remove all checkboxs and quantity text fields
-							checkBoxList = new ArrayList<JCheckBox> ();
+							//checkBoxList = new ArrayList<JCheckBox> ();
 							returnQuantityFieldList = new ArrayList<JTextField>();
 							// clean the list
 							upcList = new ArrayList<Integer>();
 							priceList = new ArrayList<Double>();
 							purchaseQuantityList = new ArrayList<Integer>();
 							// create a table of all purchase item associated with the receipt id
-							String[] columnLabels = {"remove", "return quantity", 
+							String[] columnLabels = {"return quantity", 
 					                 "UPC", "title", "purchase quantity", 
 					                 "unit price"};
 							ArrayList< ArrayList<String> > rowList = new ArrayList< ArrayList<String> >();
@@ -569,30 +572,29 @@ public class ClerkController implements ActionListener, ExceptionListener {
 									returnQuantityField = new JTextField(4);
 									// when you click the field, unselect the confirm return checkbox
 									returnQuantityField.addFocusListener(new UnSelectCheckBox(confirmReturn));
-									removeItem = new JCheckBox();
+									//removeItem = new JCheckBox();
 									// when the checkbox is selected, disable the return quantity field
-									removeItem.addItemListener(new DisableTextField(returnQuantityField));
+									//removeItem.addItemListener(new DisableTextField(returnQuantityField));
 									// and unselect the confirm return checkbox
 									// otherwise enable the field
-									removeItem.addItemListener(new ItemListener() {										
-										@Override
-										public void itemStateChanged(ItemEvent e) {
-											// TODO Auto-generated method stub
-											JCheckBox cb = (JCheckBox) e.getSource();
-											if (cb.isSelected()) {
-												confirmReturn.setSelected(false);
-											} 
-										}
-									});
+//									removeItem.addItemListener(new ItemListener() {										
+//										@Override
+//										public void itemStateChanged(ItemEvent e) {
+//											// TODO Auto-generated method stub
+//											JCheckBox cb = (JCheckBox) e.getSource();
+//											if (cb.isSelected()) {
+//												confirmReturn.setSelected(false);
+//											} 
+//										}
+//									});
 									
 									returnQuantityFieldList.add(returnQuantityField);
-									checkBoxList.add(removeItem);
+									//checkBoxList.add(removeItem);
 									//removeItem.
 								}
 								
 								// add the table to the gui
 								dialogHelper.addOneTableToPanel(inputPane, columnLabels,
-					                       checkBoxList,
 					                       returnQuantityFieldList, 
 					                       rowList); 
 							} catch (SQLException ex) {
@@ -903,6 +905,30 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			}
 		}
 		return fieldValueList;
+	}
+	
+	/* write the field values of fieldList1 to valueList1 
+	*  and write the field values of fieldList2 to valueList2
+	*  under the conditions:
+	*  1. both fields from the the two field lists are not empty
+	*  2. both text fields from the two field lists are not disabled
+	*  
+	*  Note fieldList1 and fieldList2 should have the same size
+	*/
+	private void collectNonEmptyValues(ArrayList<JTextField> fieldList1, 
+			                           ArrayList<JTextField> fieldList2,
+			                           ArrayList<Integer> valueList1,
+			                           ArrayList<Integer> valueList2 ) {
+		for (int i=0; i<fieldList1.size(); ++i) {
+			if (fieldList1.get(i).isEnabled()
+				&& fieldList1.get(i).getText().trim().length() != 0
+				&& fieldList2.get(i).isEnabled()
+				&& fieldList2.get(i).getText().trim().length() != 0
+				) {
+				valueList1.add(Integer.parseInt(fieldList1.get(i).getText().trim()));
+				valueList2.add(Integer.parseInt(fieldList2.get(i).getText().trim()));
+			}
+		}
 	}
 	
 	// get the current date in format

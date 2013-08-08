@@ -175,8 +175,7 @@ public class DialogHelper {
 	}
 	
 	// add a table of gui components to the inputPanel
-	public void addOneTableToPanel(JPanel inputPanel, String[] columnLabels,
-			                       ArrayList<JCheckBox> checkboxList,
+	public void addOneTableToPanel(JPanel inputPanel, String[] columnLabels,			               
 			                       ArrayList<JTextField> fieldList, 
 			                       ArrayList< ArrayList<String> > rowList) {
 		int rowCount = 0;
@@ -194,25 +193,18 @@ public class DialogHelper {
 		}
 		rowCount += 1;
 		
-		for (int row=0; row<checkboxList.size(); ++row) {
-			// add the checkbox
-			c.gridx = 0;
-			c.gridy = rowCount;
-			c.fill = GridBagConstraints.HORIZONTAL;
-			c.insets = new Insets(0, 0, 0, 10);
-			gb.setConstraints(checkboxList.get(row), c);
-			inputPanel.add(checkboxList.get(row));
+		for (int row=0; row<fieldList.size(); ++row) {
 			// add the text field
-			c.gridx = 1;
+			c.gridx = 0;
 			c.gridy = rowCount;
 			c.fill = GridBagConstraints.HORIZONTAL;
 			c.insets = new Insets(0, 0, 0, 10);
 			gb.setConstraints(fieldList.get(row), c);
 			inputPanel.add(fieldList.get(row));
 			// add one row from rowList
-			for (int column = 0; column < columnLabels.length-2; ++column) {
+			for (int column = 0; column < columnLabels.length-1; ++column) {
 				JLabel fieldLabel= new JLabel(rowList.get(row).get(column),SwingConstants.RIGHT);
-				c.gridx = column + 2;
+				c.gridx = column + 1;
 				c.gridy = rowCount;
 				c.fill = GridBagConstraints.HORIZONTAL;
 				c.insets = new Insets(0, 0, 0, 10);

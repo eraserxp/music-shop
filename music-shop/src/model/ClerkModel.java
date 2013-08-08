@@ -192,7 +192,7 @@ public class ClerkModel {
 	// obtain the title given the item UPC
 	public String queryTitle(int itemUPC) {
 		String title = null; 
-		ResultSet rs;
+		ResultSet rs = null;
 		String sqlStatement = "select title from Item where upc = ?";
 		                      
 		try {
@@ -206,14 +206,16 @@ public class ClerkModel {
 		} catch (SQLException ex) {
 			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
 			fireExceptionGenerated(event);
-		}
+		} finally {
+	        try { rs.close(); } catch (Exception ignore) { }
+	    }
 		return title;
 	}
 	
 	// obtain the unit price given the UPC of the item
 	public double queryItemPrice(int itemUPC) {
 		double unitPrice = 0.0; 
-		ResultSet rs;
+		ResultSet rs = null;
 		String sqlStatement = "select price from Item where upc = ?";
 		                      
 		try {
@@ -227,7 +229,9 @@ public class ClerkModel {
 		} catch (SQLException ex) {
 			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
 			fireExceptionGenerated(event);
-		}
+		} finally {
+	        try { rs.close(); } catch (Exception ignore) { }
+	    }
 		return unitPrice;
 	}
 
@@ -235,12 +239,13 @@ public class ClerkModel {
 	public boolean isUPCExisted(int itemUPC) {
 		//boolean isValid = false;
 		String title = null;
+		ResultSet rs = null;
 		// every item must have a non-null title 
 		String sqlStatement = "select title from Item where upc = ?";
 		try {
 			ps = con.prepareStatement(sqlStatement);
 			ps.setInt(1,itemUPC);
-			ResultSet rs = ps.executeQuery();
+			rs = ps.executeQuery();
 			while (rs.next()) {
 				title = rs.getString(1);	
 			}
@@ -248,7 +253,9 @@ public class ClerkModel {
 		} catch (SQLException ex) {
 			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
 			fireExceptionGenerated(event);
-		}
+		} finally {
+	        try { rs.close(); } catch (Exception ignore) { }
+	    }
 
 		if (title == null) {
 			return false;
@@ -262,12 +269,13 @@ public class ClerkModel {
 	public boolean isUPCValid(int itemUPC) {
 		//boolean isValid = false;
 		int stock = 0;
+		ResultSet rs = null;
 		// every item must have a non-null title 
 		String sqlStatement = "select stock from Item where upc = ?";
 		try {
 			ps = con.prepareStatement(sqlStatement);
 			ps.setInt(1,itemUPC);
-			ResultSet rs = ps.executeQuery();
+			rs = ps.executeQuery();
 			while (rs.next()) {
 				stock = rs.getInt(1);	
 			}
@@ -275,7 +283,9 @@ public class ClerkModel {
 		} catch (SQLException ex) {
 			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
 			fireExceptionGenerated(event);
-		}
+		} finally {
+	        try { rs.close(); } catch (Exception ignore) { }
+	    }
 
 		if (stock == 0) {
 			return false;
@@ -287,7 +297,7 @@ public class ClerkModel {
 	// obtain the stok quantity of an item
 	public int queryItemQuantity(int itemUPC) {
 		int stockQuantity = 0; 
-		ResultSet rs;
+		ResultSet rs = null;
 		String sqlStatement = "select stock from Item where upc = ?";
 		                      
 		try {
@@ -301,7 +311,10 @@ public class ClerkModel {
 		} catch (SQLException ex) {
 			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
 			fireExceptionGenerated(event);
-		}
+		} finally {
+	        try { rs.close(); } catch (Exception ignore) { }
+	    }
+		
 		return stockQuantity;
 	}
 
@@ -309,7 +322,7 @@ public class ClerkModel {
 	// so that this function will not change the nextval of the sequence
 	public int getNextReceiptID() {
 		int nextReceiptID = 0; 
-		ResultSet rs;
+		ResultSet rs = null;
 		String getNext = "select receiptID_counter.nextval from dual";
 		String decrementByOne = "alter sequence receiptID_counter increment by -1";
 		String resetToOriginal = "select receiptID_counter.nextval from dual";
@@ -331,7 +344,9 @@ public class ClerkModel {
 		} catch (SQLException ex) {
 			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
 			fireExceptionGenerated(event);
-		}
+		} finally {
+	        try { rs.close(); } catch (Exception ignore) { }
+	    }
 		return nextReceiptID;
 	}
 	
@@ -340,7 +355,7 @@ public class ClerkModel {
 	// so that this function will not change the nextval of the sequence
 	public int getNextReturnID() {
 		int nextReturnID = 0; 
-		ResultSet rs;
+		ResultSet rs = null;
 		String getNext = "select retid_counter.nextval from dual";
 		String decrementByOne = "alter sequence retid_counter increment by -1";
 		String resetToOriginal = "select retid_counter.nextval from dual";
@@ -362,7 +377,9 @@ public class ClerkModel {
 		} catch (SQLException ex) {
 			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
 			fireExceptionGenerated(event);
-		}
+		} finally {
+	        try { rs.close(); } catch (Exception ignore) { }
+	    }
 		return nextReturnID;
 	}
 
@@ -384,6 +401,7 @@ public class ClerkModel {
 	// check if the receiptId existed in database
 	public boolean isReceiptIdExisted(int receiptId) {
 		int count = 0;
+		ResultSet rs = null;
 		try {
 			ps = con.prepareStatement(
 					"select count(*) from purchase P " +
@@ -391,7 +409,7 @@ public class ClerkModel {
 					); 
 
 			ps.setInt(1, receiptId);
-			ResultSet rs = ps.executeQuery();
+			rs = ps.executeQuery();
 			if (rs.next()) {
 				count =  rs.getInt(1);
 			}
@@ -399,7 +417,9 @@ public class ClerkModel {
 			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
 			fireExceptionGenerated(event);
 			// no need to commit or rollback since it is only a query
-		}
+		} finally {
+	        try { rs.close(); } catch (Exception ignore) { }
+	    }
 		
 		if (count==1) {
 			return true;
@@ -418,6 +438,7 @@ public class ClerkModel {
 	*/ 
 	public boolean isReceiptIdValid(int receiptId) {
 		int count = 0;
+		ResultSet rs = null;
 		try {
 			ps = con.prepareStatement(
 					"select count(*) from purchase P" +
@@ -427,7 +448,7 @@ public class ClerkModel {
 					); 
 
 			ps.setInt(1, receiptId);
-			ResultSet rs = ps.executeQuery();
+			rs = ps.executeQuery();
 			if (rs.next()) {
 				count =  rs.getInt(1);
 			}
@@ -435,7 +456,9 @@ public class ClerkModel {
 			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
 			fireExceptionGenerated(event);
 			// no need to commit or rollback since it is only a query
-		}
+		} finally {
+	        try { rs.close(); } catch (Exception ignore) { }
+	    }
 		
 		if (count==1) {
 			return true;
@@ -448,6 +471,7 @@ public class ClerkModel {
 	// receiptId should be an existing one
 	public boolean isReceiptIdOutdated(int receiptId) {
 		int count = 0;
+		ResultSet rs = null;
 		try {
 			/* valid purchase ---- there is some purchaseItems associated with it.
 			*                      If there is no purchaseItems associated with it,
@@ -465,7 +489,7 @@ public class ClerkModel {
 					); 
 
 			ps.setInt(1, receiptId);
-			ResultSet rs = ps.executeQuery();
+			rs = ps.executeQuery();
 			if (rs.next()) {
 				count =  rs.getInt(1);
 			}
@@ -473,7 +497,9 @@ public class ClerkModel {
 			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
 			fireExceptionGenerated(event);
 			// no need to commit or rollback since it is only a query
-		}
+		} finally {
+	        try { rs.close(); } catch (Exception ignore) { }
+	    }
 		
 		if (count==1) {
 			return false;
@@ -496,26 +522,25 @@ public class ClerkModel {
 			ps.setInt(1, receiptId);
 			ResultSet rs = ps.executeQuery();
 			return rs; 
-		}
-		catch (SQLException ex)
-		{
+		} catch (SQLException ex){
 			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
 			fireExceptionGenerated(event);
 			// no need to commit or rollback since it is only a query
 
 			return null; 
-		}
+		} 
 	}
 	
 	// receiptId must be existed in database
 	public String getCardNo(int receiptId) {
 		String cardNo = null;
+		ResultSet rs = null;
 		try
 		{	 
 			ps = con.prepareStatement("SELECT cardN from purchase" 
 		                               + " where receiptId = ?" );
 			ps.setInt(1, receiptId);
-			ResultSet rs = ps.executeQuery();
+			rs = ps.executeQuery();
 			while (rs.next()) {
 				cardNo = rs.getString(1);
 			}
@@ -526,7 +551,9 @@ public class ClerkModel {
 			fireExceptionGenerated(event);
 			// no need to commit or rollback since it is only a query
 			return null; 
-		}
+		} finally {
+	        try { rs.close(); } catch (Exception ignore) { }
+	    }
 		
 		return cardNo;
 		

@@ -8,6 +8,7 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.*; 
 
+import model.ClerkModel;
 import model.CustomerModel;
 
 import org.omg.CORBA.portable.CustomValue;
@@ -361,11 +362,141 @@ public class CustomerController implements ActionListener, ExceptionListener {
 	 *
 	 */
 	class GoShoppingDialog extends JDialog implements ActionListener {
-
-		public GoShoppingDialog(ShopGUI mainGui) {
+		final JTextField usernameField = new JTextField(10);
+		final JPasswordField passwordField = new JPasswordField(10);
+		final JButton loginButton = new JButton("Login");
+		final JTextField categoryField = new JTextField(10);
+		final JTextField titleField = new JTextField(20);
+		final JTextField singerField = new JTextField(10);
+		final JButton searchButton = new JButton("search");
+		String cid = null; // to record the username
+		
+		
+		public GoShoppingDialog(ShopGUI mainGUI) {
 			// TODO Auto-generated constructor stub
+			super(mainGUI, "Customer registration", true);
+			//setResizable(false);
+			// for formating the floats
+			final NumberFormat numberFormatter = NumberFormat.getNumberInstance();
+			numberFormatter.setMinimumFractionDigits(2);
+			numberFormatter.setMaximumFractionDigits(2);
+			
+			final JPanel contentPane = new JPanel(new BorderLayout());
+			setContentPane(contentPane);
+			contentPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+			
+			// the pane to show login information, contain username 
+			final JPanel loginPane = dialogHelper.createInputPane("User login");
+			dialogHelper.addComponentsToPanel(loginPane, "username", usernameField, 
+					                          "password", passwordField, loginButton);
+			
+			// the pane allow the users to search and add items to shopping cart
+			final JPanel searchPane = dialogHelper.createInputPane("Search items");			
+			dialogHelper.addComponentsToPanel(searchPane, "category", categoryField, 
+                    "title", titleField, "singer", singerField, searchButton);
+			// disable all components in the search pane because the user has not logged in
+			for (Component c : searchPane.getComponents()) 
+				c.setEnabled(false);
+			
+			// show the contents of the shopping cart and also allow the user to change
+			// the contents of the shopping cart
+			JPanel cartPane = dialogHelper.createInputPane("Shopping cart");
+			
+			// the pane to allow the user to check out
+			JPanel confirmPane = new JPanel();
+			confirmPane.setLayout(new BoxLayout(confirmPane, BoxLayout.X_AXIS));
+			confirmPane.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 2));
+			final JButton checkOutButton = new JButton("Check out");
+			checkOutButton.setEnabled(false);
+			JButton cancelButton = new JButton("Cancel");			
+			dialogHelper.addComponentsToPanel(confirmPane, checkOutButton, cancelButton);
+			
+			contentPane.add(loginPane, BorderLayout.NORTH);
+			JPanel centerPane = new JPanel(new BorderLayout());
+			centerPane.add(searchPane, BorderLayout.NORTH);
+			centerPane.add(cartPane, BorderLayout.CENTER);
+			contentPane.add(centerPane, BorderLayout.CENTER);
+			contentPane.add(confirmPane, BorderLayout.SOUTH);
+			
+			// add listeners
+			cancelButton.addActionListener(new ActionListener()
+			{
+				public void actionPerformed(ActionEvent e)
+				{
+					dispose();
+					mainGui.updateStatusBar("CANCEL THIS OPERATION");
+				}
+			});
+
+			
+			addWindowListener(new WindowAdapter() 
+			{
+				public void windowClosing(WindowEvent e)
+				{
+					mainGui.updateStatusBar("CANCEL THIS OPERATION");
+					dispose();
+				}
+			});
+			
+			// when the login button is pressed, check the username, password and 
+			// allow the user in and enable the components in search panel
+			loginButton.addActionListener(new ActionListener() {
+				
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					// TODO Auto-generated method stub
+					if (usernameField.getText().trim().length()==0) {
+						popUpErrorMessage("Username is empty!");
+						usernameField.requestFocus();
+					} else if (passwordField.getText().trim().length()==0) {
+						popUpErrorMessage("Password is empty!");
+						passwordField.requestFocus();
+					} else {
+						String username = usernameField.getText().trim();
+						String password = passwordField.getText().trim();
+						// check the username and password
+						if (customerModel.queryUsernamePassword(username, password)) {
+							cid = username;			
+							String info = "Welcome " + cid + "! You have successfully logged in!";
+							popUpOKMessage(info);
+							// disable all components in the login pane
+							for (Component c : loginPane.getComponents()) 
+								c.setEnabled(false);
+							// enable all components in the search pane
+							for (Component c : searchPane.getComponents()) 
+								c.setEnabled(true);
+							
+							repaint();
+						} else {
+							popUpErrorMessage("Failed to log in!");
+							usernameField.setText("");
+							passwordField.setText("");
+						}
+					}
+				}
+			});
+			
+			// when the search button is pressed, check all three fields are not empty
+			// and create a new windows shows all matched items
+			searchButton.addActionListener(new ActionListener() {
+				
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					// TODO Auto-generated method stub
+					if (categoryField.getText().trim().length()==0 
+					    && titleField.getText().trim().length()==0
+					    && singerField.getText().trim().length()==0) {
+						
+						popUpErrorMessage("All three fields are empty!");
+						categoryField.requestFocus();
+					}
+				}
+			});
+			
 		}
 
+		
+		
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			// TODO Auto-generated method stub

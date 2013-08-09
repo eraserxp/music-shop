@@ -1,5 +1,6 @@
 package gui_helper;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -173,6 +174,144 @@ public class DialogHelper {
 		}
 		rowCount2 += 1;
 	}
+	
+	
+	// add label:field + label:field + button
+	public void  addComponentsToPanel(JPanel inputPanel, String label1, JTextField field1,
+			                           String label2, JTextField field2, JButton button) {
+		inputPanel.setLayout(gb);
+		
+		// create and place label component
+		JLabel jLabel1= new JLabel(label1 + ": ", SwingConstants.RIGHT);	    
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = 0;
+		c.insets = new Insets(0, 0, 0, 5);
+		c.anchor = GridBagConstraints.EAST;
+		gb.setConstraints(jLabel1, c);
+		inputPanel.add(jLabel1);
+
+		// place field1 component
+		c.gridx = 1;
+		c.gridy = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(0, 0, 0, 30);
+		gb.setConstraints(field1, c);
+		inputPanel.add(field1);
+		
+		// create and place label2 component
+		JLabel jLabel2= new JLabel(label2 + ": ", SwingConstants.RIGHT);	    
+		c.gridx = 2;
+		c.gridy = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(5, 5, 5, 5);
+		gb.setConstraints(jLabel2, c);
+		inputPanel.add(jLabel2);
+
+		// place field2 component
+		c.gridx = 3;
+		c.gridy = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(0, 0, 0, 30);
+		//c.anchor = GridBagConstraints.WEST;
+		gb.setConstraints(field2, c);
+		inputPanel.add(field2);
+		
+		// place the button component
+		c.gridx = 4;
+		c.gridy = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(0, 0, 0, 0);
+		c.anchor = GridBagConstraints.WEST;
+		gb.setConstraints(button, c);
+		inputPanel.add(button);
+	}
+	
+	// add label:field + label:field + label:field + button
+	public void  addComponentsToPanel(JPanel inputPanel, String label1, JTextField field1,
+			                           String label2, JTextField field2, 
+			                           String label3, JTextField field3,
+			                           JButton button) {
+		inputPanel.setLayout(gb);
+		
+		// create and place label component
+		JLabel jLabel1= new JLabel(label1 + ": ", SwingConstants.RIGHT);	    
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = 0;
+		c.insets = new Insets(0, 0, 0, 5);
+		c.anchor = GridBagConstraints.EAST;
+		gb.setConstraints(jLabel1, c);
+		inputPanel.add(jLabel1);
+
+		// place field1 component
+		c.gridx = 1;
+		c.gridy = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(0, 0, 0, 30);
+		gb.setConstraints(field1, c);
+		inputPanel.add(field1);
+		
+		// create and place label2 component
+		JLabel jLabel2= new JLabel(label2 + ": ", SwingConstants.RIGHT);	    
+		c.gridx = 2;
+		c.gridy = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(5, 5, 5, 5);
+		gb.setConstraints(jLabel2, c);
+		inputPanel.add(jLabel2);
+
+		// place field2 component
+		c.gridx = 3;
+		c.gridy = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(0, 0, 0, 30);
+		//c.anchor = GridBagConstraints.WEST;
+		gb.setConstraints(field2, c);
+		inputPanel.add(field2);
+		
+		// create and place label3 component
+		JLabel jLabel3= new JLabel(label3 + ": ", SwingConstants.RIGHT);	    
+		c.gridx = 4;
+		c.gridy = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(5, 5, 5, 5);
+		gb.setConstraints(jLabel3, c);
+		inputPanel.add(jLabel3);
+
+		// place field3 component
+		c.gridx = 5;
+		c.gridy = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(0, 0, 0, 30);
+		//c.anchor = GridBagConstraints.WEST;
+		gb.setConstraints(field3, c);
+		inputPanel.add(field3);
+		
+		// place the button component
+		c.gridx = 6;
+		c.gridy = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(0, 0, 0, 0);
+		c.anchor = GridBagConstraints.WEST;
+		gb.setConstraints(button, c);
+		inputPanel.add(button);
+	}
+	
+	// add one label to the input panel
+	public void  addComponentsToPanel(JPanel inputPanel, String label) {
+		inputPanel.setLayout(gb);		
+		// create and place label component
+		JLabel jLabel= new JLabel(label, SwingConstants.RIGHT);	    
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = 0;
+		c.insets = new Insets(0, 0, 0, 5);
+		c.anchor = GridBagConstraints.EAST;
+		gb.setConstraints(jLabel, c);
+		inputPanel.add(jLabel);
+	}
+	
 	
 	// add a table of gui components to the inputPanel
 	public void addOneTableToPanel(JPanel inputPanel, String[] columnLabels,			               

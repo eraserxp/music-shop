@@ -181,7 +181,33 @@ public class CustomerModel {
 		
 	}
 	
-
+	public boolean queryUsernamePassword(String username, String password) {
+		int count = 0; 
+		ResultSet rs = null;
+		String sqlStatement = "select count(*) from customer where cid = ? and cpassword = ?";
+		                      
+		try {
+			ps = con.prepareStatement(sqlStatement);
+			ps.setString(1,username);
+			ps.setString(2, password);
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				count = rs.getInt(1);	
+			}
+			con.commit();
+		} catch (SQLException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+		} finally {
+	        try { rs.close(); } catch (Exception ignore) { }
+	    }
+		
+		if (count==0) {
+			return false;
+		} else {
+			return true;
+		}
+	}
 
 	
 	public String queryTitle(int itemUPC) {

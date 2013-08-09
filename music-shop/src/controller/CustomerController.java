@@ -22,6 +22,8 @@ import view.ShopGUI;
 import java.sql.*;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 
 /*
@@ -372,6 +374,17 @@ public class CustomerController implements ActionListener, ExceptionListener {
 		final JButton searchButton = new JButton("search");
 		ResultSet searchResult = null;
 		String cid = null; // to record the username
+		// to record the upc of items that are already in cart
+		ArrayList<Integer> itemsInCart =  new ArrayList<Integer>();
+		// record a selection of items (upc) through the search result dialog
+		ArrayList<Integer> itemsSelection =  new ArrayList<Integer>();
+		JPanel cartPane = null;
+		// quantity fields in the cart panel
+		ArrayList<JTextField> quantityFieldList = new ArrayList<JTextField>();
+		// mapping <upc, quantity>, use LinkedHashMap to keep insertion order
+		LinkedHashMap<Integer, Integer> shoppingCart = new LinkedHashMap<Integer, Integer>();
+		
+		
 		
 		
 		public GoShoppingDialog(ShopGUI mainGUI) {
@@ -402,7 +415,7 @@ public class CustomerController implements ActionListener, ExceptionListener {
 			
 			// show the contents of the shopping cart and also allow the user to change
 			// the contents of the shopping cart
-			JPanel cartPane = dialogHelper.createInputPane("Shopping cart");
+			cartPane = dialogHelper.createInputPane("Shopping cart");
 			
 			// the pane to allow the user to check out
 			JPanel confirmPane = new JPanel();
@@ -481,11 +494,32 @@ public class CustomerController implements ActionListener, ExceptionListener {
 						//e.printStackTrace();
 						mainGui.updateStatusBar(ex.getMessage());
 					} // 
+					
+					// when user click the add item button
+					// pass the list of selected item to the go shopping dialog
+					// and close the current search result dialog
+					addButton.addActionListener(new ActionListener() {						
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							// TODO Auto-generated method stub
+							itemsSelection = getSelectedItems();
+							// update the items in the shopping cart
+							updateCartPanel();
+							GoShoppingDialog.this.pack();
+							dispose();
+						}
+					});
 				}
 				
 				public ArrayList<Integer> getSelectedItems() {
+					for (int i=0; i<upcList.size(); ++i) {
+						if (checkboxList.get(i).isSelected()) {
+							selectedUPCs.add(upcList.get(i));
+						}
+					}
 					return selectedUPCs;
 				}
+				
 			}
 			
 			// add listeners
@@ -577,7 +611,76 @@ public class CustomerController implements ActionListener, ExceptionListener {
 			
 		}
 
-		
+		// updates the content of shopping cart and show the shopping cart
+		private void updateCartPanel() {
+			/* update the shopping cart according to itemsSelection 
+			 */
+			for (int i=0; i<itemsSelection.size(); ++i) {
+				int upc = itemsSelection.get(i);
+				// if the item is already in the cart, add the quantity of the item by 1
+				if (shoppingCart.keySet().contains(upc)) {
+					int newQuantity = shoppingCart.get(upc) + 1;
+					// if the stock is less than the new quantity
+					if (customerModel.queryItemQuantity(upc)<newQuantity) {
+						popUpErrorMessage("You can't add the item with upc=" + upc 
+								+ " because the new purchase quantity=" + newQuantity
+								+ " exceeds the stock quantity!");
+					} else {
+						shoppingCart.put(upc, newQuantity);
+					}
+					
+				} else { // if the item is not in the shopping cart, add it to shopping cart
+					shoppingCart.put(upc, 1);
+				}
+			}
+			// redrawing the content of the shopping cart in cart pane
+			cartPane.removeAll();
+			// clean up quantity field list
+			quantityFieldList = new ArrayList<JTextField>();
+			// create a table of all purchase item associated with the receipt id
+			String[] columnLabels = {"purchase quantity", 
+					"upc", "title", "category", "Leading singers", "price", "stock"};
+			ArrayList< ArrayList<String> > rowList = new ArrayList< ArrayList<String> >();
+			// iterate over the shopping cart
+			for (int upc:shoppingCart.keySet()) {
+				// obtain the information about the item 
+				ResultSet rs = customerModel.getItem(upc);
+				try {
+					while (rs.next()) {
+						ArrayList<String> oneRow = new ArrayList<String>();
+						int upcInt = rs.getInt("upc");
+						String upcString = Integer.toString(upcInt);
+						oneRow.add(upcString);
+						String title = rs.getString("title");
+						oneRow.add(title);
+						String category = rs.getString("category");
+						oneRow.add(category);
+						String singerName = rs.getString("singers");
+						oneRow.add(singerName);
+						double price = rs.getDouble("price");
+						String priceString = Double.toString( price );
+						oneRow.add(priceString);
+						int stock = rs.getInt("stock");
+						String stockString = Integer.toString(stock);
+						oneRow.add(stockString);
+						rowList.add(oneRow);
+						JTextField quantityField = new JTextField();
+						quantityField.setText(Integer.toString(shoppingCart.get(upc)));
+						quantityFieldList.add(quantityField);
+					}
+					rs.close();
+				} catch (SQLException ex) {
+					// TODO Auto-generated catch block
+					//e.printStackTrace();
+					mainGui.updateStatusBar(ex.getMessage());
+				} //
+			} // end of loop
+			// add the table to the gui
+			dialogHelper.addOneTableToPanel(cartPane, columnLabels,
+					quantityFieldList, rowList); 
+			pack();
+			
+		}
 		
 		@Override
 		public void actionPerformed(ActionEvent arg0) {

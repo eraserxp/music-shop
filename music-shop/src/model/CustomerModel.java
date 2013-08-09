@@ -44,6 +44,29 @@ public class CustomerModel {
 		con = MyOracleConnection.getInstance().getConnection();
 	}
 
+    // get an item given its upc
+	public ResultSet getItem(int upc) {
+		ResultSet rs = null;
+			try
+			{	 
+				ps = con.prepareStatement("SELECT I.upc, title, category," +
+						"LISTAGG(name, ',') within group (order by name) as singers, " +
+						" price, stock" +
+						" from Item I, LeadSinger L" +
+						" where I.upc = L.upc and I.upc=?" +
+						" group by I.upc, title, category, price, stock" );
+				ps.setInt(1, upc);
+				rs = ps.executeQuery();
+				return rs; 
+			} catch (SQLException ex){
+				ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+				fireExceptionGenerated(event);
+				// no need to commit or rollback since it is only a query
+				return null; 
+			} // end of try catch block
+	}
+	
+	
 	
 	// search items with given category, title, and singerName
 	// any of three input can be empty string, but there must be at least one is not empty
@@ -210,13 +233,28 @@ public class CustomerModel {
 	}
 
 	
-	public String queryTitle(int itemUPC) {
-		return "title";
-	}
-	
-	// obtain the unit price given the UPC of the item
-	public float queryItemPrice(int itemUPC) {
-		return 0;
+	// obtain the stok quantity of an item
+	public int queryItemQuantity(int itemUPC) {
+		int stockQuantity = 0; 
+		ResultSet rs = null;
+		String sqlStatement = "select stock from Item where upc = ?";
+		                      
+		try {
+			ps = con.prepareStatement(sqlStatement);
+			ps.setInt(1,itemUPC);
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				stockQuantity = rs.getInt("stock");	
+			}
+			con.commit();
+		} catch (SQLException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+		} finally {
+	        try { rs.close(); } catch (Exception ignore) { }
+	    }
+		
+		return stockQuantity;
 	}
 	
 	// query a nonempty username, if it is already existed

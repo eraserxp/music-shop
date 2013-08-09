@@ -22,10 +22,7 @@ public class ShopGUI extends JFrame {
 	public static String PROCESS_RETURN = "Process return"; 
 	// action command for customer
 	public static String REGISTRATION = "Registration";
-	public static String SEARCH_ITEM = "Search item";
-	public static String ADD_ITEM_TO_CART = "Add item to cart";
-	public static String REMOVE_ITEM = "Remove item from cart";
-	public static String CHECK_OUT = "Check out";
+	public static String GO_SHOPPING = "Go shopping";
 	// action command for manager
 	public static String ADD_ITEM_TO_STORE = "Add item to store";
 	public static String PROCESS_DELIVERY = "Process delivery";
@@ -132,10 +129,7 @@ public class ShopGUI extends JFrame {
 		customerMenu = new JMenu("Customer");
 		
 		createMenuItem(customerMenu, REGISTRATION, REGISTRATION);
-		createMenuItem(customerMenu, SEARCH_ITEM, SEARCH_ITEM);
-		createMenuItem(customerMenu, ADD_ITEM_TO_CART, ADD_ITEM_TO_CART);
-		createMenuItem(customerMenu, REMOVE_ITEM, REMOVE_ITEM);
-		createMenuItem(customerMenu, CHECK_OUT, CHECK_OUT);
+		createMenuItem(customerMenu, GO_SHOPPING, GO_SHOPPING);
 		//add the menu to the menu bar
 		menuBar.add(customerMenu);
 	}	

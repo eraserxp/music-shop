@@ -526,7 +526,6 @@ public class ClerkModel {
 			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
 			fireExceptionGenerated(event);
 			// no need to commit or rollback since it is only a query
-
 			return null; 
 		} 
 	}

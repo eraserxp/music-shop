@@ -43,7 +43,7 @@ create table Customer(
 	cpassword varchar(10) not null,
 	cname varchar(40) not null,
 	caddress varchar(60) not null,
-	cphone int not null,
+	cphone varchar(20) not null,
 	PRIMARY KEY (cid)
 	);
 	
@@ -161,17 +161,17 @@ insert into HasSong
 values(11116, 'Better than New');	
 
 insert into Customer
-values('Andypw', '1234', 'Andy Lau', '1234 Main Mall', 6048221111);
+values('Andypw', '1234', 'Andy Lau', '1234 Main Mall', '6048221111');
 insert into Customer
-values('Hebepw', '1234', 'Hebe T', '1221 Main Mall', 6048220000);
+values('Hebepw', '1234', 'Hebe T', '1221 Main Mall', '6048220000');
 insert into Customer
-values('Tonypw', '1234', 'Tony Leung', '1200 Main Mall', 6048222222);
+values('Tonypw', '1234', 'Tony Leung', '1200 Main Mall', '6048222222');
 insert into Customer
-values('Jonepw', '1234', 'Jone Ross', '1200 Main Mall', 6048223333);
+values('Jonepw', '1234', 'Jone Ross', '1200 Main Mall', '6048223333');
 insert into Customer
-values('Rachelpw', '1234', 'Rachel Green', '1204 Main Mall', 6048224444);
+values('Rachelpw', '1234', 'Rachel Green', '1204 Main Mall', '6048224444');
 insert into Customer
-values('cpw', '1234', 'Chandler Bing', '1205 Main Mall', 6048225555);
+values('cpw', '1234', 'Chandler Bing', '1205 Main Mall', '6048225555');
 
 insert into Purchase
 values(receiptID_counter.nextval, '2013-08-01', null, '1234123412341234', '2014-01', null, null);	

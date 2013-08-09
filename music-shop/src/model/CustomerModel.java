@@ -2,6 +2,9 @@ package model;
 import subject_observer.*;
 
 import java.sql.*; 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 
 import javax.swing.event.EventListenerList;
 
@@ -41,20 +44,145 @@ public class CustomerModel {
 		con = MyOracleConnection.getInstance().getConnection();
 	}
 
-	public boolean addCustomer() {
-		return false;
+	
+	// search items with given category, title, and singerName
+	// any of three input can be empty string, but there must be at least one is not empty
+	// Note we don't allow any of the input to be null
+	public ResultSet searchItem(String category, String title, String singerName) {
+		ResultSet rs = null;
+		
+		
+		if (category.length()!=0 && title.length()==0 && singerName.length()==0) {
+			// only category is not empty
+			try
+			{	 
+				ps = con.prepareStatement("SELECT I.upc, title, name, category, price" 
+						+ " FROM Item I, LeadSinger L " +
+						" where L.upc = I.upc and category = ?" );
+				ps.setString(1, category);
+				rs = ps.executeQuery();
+				return rs; 
+			} catch (SQLException ex){
+				ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+				fireExceptionGenerated(event);
+				// no need to commit or rollback since it is only a query
+				return null; 
+			} // end of try catch block
+			
+		} else if (category.length()==0 && title.length()!=0 && singerName.length()==0) {
+			// only title is not empty
+			try
+			{	 
+				ps = con.prepareStatement("SELECT I.upc, title, name, category, price" 
+						+ " FROM Item I, LeadSinger L " +
+						" where L.upc = I.upc and title = ?" );
+				ps.setString(1, title);
+				rs = ps.executeQuery();
+				return rs; 
+			} catch (SQLException ex){
+				ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+				fireExceptionGenerated(event);
+				// no need to commit or rollback since it is only a query
+				return null; 
+			} // end of try catch block
+			
+		} else if (category.length()==0 && title.length()==0 && singerName.length()!=0) {
+			// only singerName is not empty
+			try
+			{	 
+				ps = con.prepareStatement("SELECT I.upc, title, name, category, price" 
+						+ " FROM Item I, LeadSinger L" +
+						" where L.upc = I.upc and name = ?" );
+				ps.setString(1, singerName);
+				rs = ps.executeQuery();
+				return rs; 
+			} catch (SQLException ex){
+				ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+				fireExceptionGenerated(event);
+				// no need to commit or rollback since it is only a query
+				return null; 
+			} // end of try catch block
+			
+		} else if (category.length()!=0 && title.length()!=0 && singerName.length()==0) {
+			// category and title are not empty
+			try
+			{	 
+				ps = con.prepareStatement("SELECT I.upc, title, name, category, price" 
+						+ " FROM Item I, LeadSinger L " +
+						"where L.upc = I.upc and category = ? and title = ?" );
+				ps.setString(1, category);
+				ps.setString(2, title);
+				rs = ps.executeQuery();
+				return rs; 
+			} catch (SQLException ex){
+				ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+				fireExceptionGenerated(event);
+				// no need to commit or rollback since it is only a query
+				return null; 
+			} // end of try catch block
+			
+		} else if (category.length()!=0 && title.length()==0 && singerName.length()!=0) {
+			// category and singerName are not empty
+			try
+			{	 
+				ps = con.prepareStatement("SELECT I.upc, title, name, category, price" 
+						+ " FROM Item I, LeadSinger L " +
+						"where L.upc = I.upc and category = ? and name = ?" );
+				ps.setString(1, category);
+				ps.setString(2, singerName);
+				rs = ps.executeQuery();
+				return rs; 
+			} catch (SQLException ex){
+				ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+				fireExceptionGenerated(event);
+				// no need to commit or rollback since it is only a query
+				return null; 
+			} // end of try catch block
+			
+		} else if (category.length()==0 && title.length()!=0 && singerName.length()!=0) {
+			// title and singerName are not empty
+			try
+			{	 
+				ps = con.prepareStatement("SELECT I.upc, title, name, category, price" 
+						+ " FROM Item I, LeadSinger L " +
+						"where L.upc = I.upc and title = ? and name = ?" );
+				ps.setString(1, title);
+				ps.setString(2, singerName);
+				rs = ps.executeQuery();
+				return rs; 
+			} catch (SQLException ex){
+				ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+				fireExceptionGenerated(event);
+				// no need to commit or rollback since it is only a query
+				return null; 
+			} // end of try catch block
+			
+		} else {
+			// all are not empty
+			try
+			{	 
+				ps = con.prepareStatement("SELECT I.upc, title, name, category, price" 
+						+ " FROM Item I, LeadSinger L " +
+						"where L.upc = I.upc and category=? and title = ? and name = ?" );
+				ps.setString(1, category);
+				ps.setString(2, title);
+				ps.setString(3, singerName);
+				rs = ps.executeQuery();
+				return rs; 
+			} catch (SQLException ex){
+				ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+				fireExceptionGenerated(event);
+				// no need to commit or rollback since it is only a query
+				return null; 
+			} // end of try catch block
+			
+		} // end of if-else-if-else block
+		
 		
 	}
 	
-	public boolean searchItem() {
-		return false;
-		
-	}
-	
-	public boolean addPurchase() {
-		return false;
-		
-	}
+
+
 	
 	public String queryTitle(int itemUPC) {
 		return "title";
@@ -94,6 +222,7 @@ public class CustomerModel {
 		}
 	}
 	
+	
 	public boolean insertCustomer(String username, String password, String name, 
 			                      String address, String phone) {
 		
@@ -114,6 +243,95 @@ public class CustomerModel {
 			fireExceptionGenerated(event);
 			return false;
 		} 
+	}
+	
+	
+	// allow the customer to process one purchase
+	// and add the corresponding purchaseItem
+	// dateString must be in the form "yyyy-MM-dd"
+	// expectedDate and deliveredDate also in the form "yyyy-MM-dd"
+	// precondition: cid, cardNumber, expiryDate, expectedDateString can't be null
+	public boolean processPurchase(int receiptId, String dateString, String cid,
+                                   String cardNumber, String expiryDate, 
+                               String expectedDateString, String deliveredDateString, 
+                                 ArrayList<Integer> upcList,
+			                     ArrayList<Integer> quantityList) {
+		try {
+			// insert a tuple into the purchase table
+			ps = con.prepareStatement("insert into purchase values" 
+				                   + "(receiptID_counter.nextval, ?, ?, ?, ?, ?, ?)");
+			//ps.setInt(1, receiptId);
+			java.sql.Date date = convertStringToDate(dateString, "yyyy-MM-dd");
+			ps.setDate(1, date);
+			ps.setString(2, cid);
+			ps.setString(3, cardNumber);
+			ps.setString(4, expiryDate);
+
+			java.sql.Date expectedDate = convertStringToDate(expectedDateString, "yyyy-MM-dd");
+			ps.setDate(5, expectedDate);
+
+			
+			if (deliveredDateString==null) {
+				ps.setNull(6, java.sql.Types.DATE);
+			} else {
+				java.sql.Date deliveredDate = convertStringToDate(deliveredDateString, "yyyy-MM-dd");
+				ps.setDate(6, deliveredDate);
+			}
+			ps.executeUpdate();
+			// insert the corresponding purchaseItem tuples
+			ps = con.prepareStatement("insert into PurchaseItem values (?, ?, ?)");
+			for (int i=0; i<upcList.size(); ++i) {
+				int upc = upcList.get(i);
+				int quantity = quantityList.get(i);
+				ps.setInt(1, receiptId);
+				ps.setInt(2, upc);
+				ps.setInt(3, quantity);
+				ps.executeUpdate();
+			}
+			// update the stock for items
+			// you should never delete an item even if its stock = 0 because some
+			// previous purchase may refer to it
+			ps = con.prepareStatement("update item set stock = stock - ? where upc = ?");
+			for (int i=0; i<upcList.size(); ++i) {				
+				int upc = upcList.get(i);
+				int quantity = quantityList.get(i);
+				ps.setInt(1, quantity);
+				ps.setInt(2, upc);
+				ps.executeUpdate();	
+			}
+
+			// commit as one transaction
+			con.commit();
+			return true;
+		} catch (SQLException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+
+			try{
+				con.rollback();
+				return false; 
+			} catch (SQLException ex2) {
+				event = new ExceptionEvent(this, ex2.getMessage());
+				fireExceptionGenerated(event);
+				return false; 
+			}
+		}
+		
+	}
+	
+	// convert a date string in format to a sql date
+	public java.sql.Date convertStringToDate(String dateString, String format) {
+		SimpleDateFormat fm = new SimpleDateFormat(format);
+		java.util.Date utilDate;
+		try {
+			utilDate = fm.parse(dateString);
+			java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
+			return sqlDate;
+		} catch (ParseException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+		}
+		return null;
 	}
 	
 	/******************************************************************************

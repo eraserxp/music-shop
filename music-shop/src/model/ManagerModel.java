@@ -1,6 +1,7 @@
 package model;
 import subject_observer.*;
 
+
 import java.sql.*; 
 
 import javax.swing.event.EventListenerList;
@@ -11,6 +12,8 @@ import subject_observer.ExceptionEvent;
 import subject_observer.ExceptionListener;
 
 
+
+//joycelynn
 
 /* provides methods to carry out the actual transactions performed by a manager:
  * 

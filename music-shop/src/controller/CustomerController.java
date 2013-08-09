@@ -7,6 +7,8 @@ import java.awt.event.*;
 
 import javax.swing.*;
 import javax.swing.border.*; 
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import model.ClerkModel;
 import model.CustomerModel;
@@ -461,7 +463,7 @@ public class CustomerController implements ActionListener, ExceptionListener {
 					
 					// create a table of all purchase item associated with the receipt id
 					String[] columnLabels = {"select", 
-			                 "UPC", "title", "leading singer", 
+			                 "UPC", "title", "leading singers", 
 			                 "category", "price"};
 					ArrayList< ArrayList<String> > rowList = new ArrayList< ArrayList<String> >();
 					try {
@@ -473,7 +475,7 @@ public class CustomerController implements ActionListener, ExceptionListener {
 							oneRow.add(upcString);
 							String title = rs.getString("title");
 							oneRow.add(title);
-							String singerName = rs.getString("name");
+							String singerName = rs.getString("singers");
 							oneRow.add(singerName);
 							String category = rs.getString("category");
 							oneRow.add(category);
@@ -665,7 +667,36 @@ public class CustomerController implements ActionListener, ExceptionListener {
 						oneRow.add(stockString);
 						rowList.add(oneRow);
 						JTextField quantityField = new JTextField();
+						quantityField.setActionCommand("for_upc_"+upc);
 						quantityField.setText(Integer.toString(shoppingCart.get(upc)));
+						/* add a document listener for the quantity field
+						 * whenever the field values changes, check the validity of the new value
+						 * and update the shopping cart
+						 */
+						quantityField.getDocument().addDocumentListener(new DocumentListener() {
+							
+							@Override
+							public void removeUpdate(DocumentEvent e) {
+								// TODO Auto-generated method stub
+								// get the parent textfield for the document change
+								JTextField textField = (JTextField) e.getDocument().getProperty("parent");
+								//if (textField.)
+								
+							}
+							
+							@Override
+							public void insertUpdate(DocumentEvent e) {
+								// TODO Auto-generated method stub
+								
+							}
+							
+							@Override
+							public void changedUpdate(DocumentEvent e) {
+								// TODO Auto-generated method stub
+								
+							}
+						});
+						
 						quantityFieldList.add(quantityField);
 					}
 					rs.close();

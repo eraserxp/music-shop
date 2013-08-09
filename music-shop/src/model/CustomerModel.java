@@ -50,7 +50,7 @@ public class CustomerModel {
 			try
 			{	 
 				ps = con.prepareStatement("SELECT I.upc, title, category," +
-						"LISTAGG(name, ',') within group (order by name) as singers, " +
+						"LISTAGG(name, ', ') within group (order by name) as singers, " +
 						" price, stock" +
 						" from Item I, LeadSinger L" +
 						" where I.upc = L.upc and I.upc=?" +
@@ -73,15 +73,17 @@ public class CustomerModel {
 	// Note we don't allow any of the input to be null
 	public ResultSet searchItem(String category, String title, String singerName) {
 		ResultSet rs = null;
-		
-		
+			
 		if (category.length()!=0 && title.length()==0 && singerName.length()==0) {
 			// only category is not empty
 			try
 			{	 
-				ps = con.prepareStatement("SELECT I.upc, title, name, category, price" 
+				ps = con.prepareStatement("SELECT I.upc, title, " +
+						" LISTAGG(name, ', ') within group (order by name) as singers," +
+						" category, price" 
 						+ " FROM Item I, LeadSinger L " +
-						" where L.upc = I.upc and category = ? and stock > 0" );
+						" where L.upc = I.upc and category = ? and stock > 0" +
+						" group by I.upc, title, category, price" );
 				ps.setString(1, category);
 				rs = ps.executeQuery();
 				return rs; 
@@ -96,9 +98,12 @@ public class CustomerModel {
 			// only title is not empty
 			try
 			{	 
-				ps = con.prepareStatement("SELECT I.upc, title, name, category, price" 
-						+ " FROM Item I, LeadSinger L " +
-						" where L.upc = I.upc and title = ? and stock > 0" );
+				ps = con.prepareStatement("SELECT I.upc, title, "
+						+ " LISTAGG(name, ', ') within group (order by name) as singers," 
+						+ " category, price" 
+						+ " FROM Item I, LeadSinger L " 
+						+ " where L.upc = I.upc and title = ? and stock > 0"  
+						+ " group by I.upc, title, category, price");
 				ps.setString(1, title);
 				rs = ps.executeQuery();
 				return rs; 
@@ -113,9 +118,12 @@ public class CustomerModel {
 			// only singerName is not empty
 			try
 			{	 
-				ps = con.prepareStatement("SELECT I.upc, title, name, category, price" 
-						+ " FROM Item I, LeadSinger L" +
-						" where L.upc = I.upc and name = ? and stock > 0" );
+				ps = con.prepareStatement("SELECT I.upc, title, "
+						+ " LISTAGG(name, ', ') within group (order by name) as singers," 
+						+ " category, price" 
+						+ " FROM Item I, LeadSinger L " 
+						+ " where L.upc = I.upc and name = ? and stock > 0" 
+						+ " group by I.upc, title, category, price");
 				ps.setString(1, singerName);
 				rs = ps.executeQuery();
 				return rs; 
@@ -130,9 +138,12 @@ public class CustomerModel {
 			// category and title are not empty
 			try
 			{	 
-				ps = con.prepareStatement("SELECT I.upc, title, name, category, price" 
-						+ " FROM Item I, LeadSinger L " +
-						"where L.upc = I.upc and category = ? and title = ? and stock > 0" );
+				ps = con.prepareStatement("SELECT I.upc, title, "
+						+ " LISTAGG(name, ', ') within group (order by name) as singers," 
+						+ " category, price" 
+						+ " FROM Item I, LeadSinger L " 
+						+ "where L.upc = I.upc and category = ? and title = ? and stock > 0"
+						+ " group by I.upc, title, category, price");
 				ps.setString(1, category);
 				ps.setString(2, title);
 				rs = ps.executeQuery();
@@ -148,9 +159,12 @@ public class CustomerModel {
 			// category and singerName are not empty
 			try
 			{	 
-				ps = con.prepareStatement("SELECT I.upc, title, name, category, price" 
-						+ " FROM Item I, LeadSinger L " +
-						"where L.upc = I.upc and category = ? and name = ? and stock > 0" );
+				ps = con.prepareStatement("SELECT I.upc, title, "
+						+ " LISTAGG(name, ', ') within group (order by name) as singers," 
+						+ " category, price" 
+						+ " FROM Item I, LeadSinger L " 
+						+ " where L.upc = I.upc and category = ? and name = ? and stock > 0"
+						+ " group by I.upc, title, category, price");
 				ps.setString(1, category);
 				ps.setString(2, singerName);
 				rs = ps.executeQuery();
@@ -166,9 +180,12 @@ public class CustomerModel {
 			// title and singerName are not empty
 			try
 			{	 
-				ps = con.prepareStatement("SELECT I.upc, title, name, category, price" 
-						+ " FROM Item I, LeadSinger L " +
-						"where L.upc = I.upc and title = ? and name = ? and stock > 0" );
+				ps = con.prepareStatement("SELECT I.upc, title, "
+						+ " LISTAGG(name, ', ') within group (order by name) as singers," 
+						+ " category, price" 
+						+ " FROM Item I, LeadSinger L " 
+						+ " where L.upc = I.upc and title = ? and name = ? and stock > 0"
+						+ " group by I.upc, title, category, price");
 				ps.setString(1, title);
 				ps.setString(2, singerName);
 				rs = ps.executeQuery();
@@ -184,9 +201,12 @@ public class CustomerModel {
 			// all are not empty
 			try
 			{	 
-				ps = con.prepareStatement("SELECT I.upc, title, name, category, price" 
-						+ " FROM Item I, LeadSinger L " +
-						"where L.upc = I.upc and category=? and title = ? and name = ? and stock > 0" );
+				ps = con.prepareStatement("SELECT I.upc, title, "
+						+ " LISTAGG(name, ', ') within group (order by name) as singers," 
+						+ " category, price" 
+						+ " FROM Item I, LeadSinger L " 
+						+ " where L.upc = I.upc and category=? and title = ? and name = ? and stock > 0" 
+						+ " group by I.upc, title, category, price");
 				ps.setString(1, category);
 				ps.setString(2, title);
 				ps.setString(3, singerName);

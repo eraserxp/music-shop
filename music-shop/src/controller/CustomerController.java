@@ -21,6 +21,7 @@ import view.ShopGUI;
 
 import java.sql.*;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 
 
 /*
@@ -369,6 +370,7 @@ public class CustomerController implements ActionListener, ExceptionListener {
 		final JTextField titleField = new JTextField(20);
 		final JTextField singerField = new JTextField(10);
 		final JButton searchButton = new JButton("search");
+		ResultSet searchResult = null;
 		String cid = null; // to record the username
 		
 		
@@ -417,6 +419,74 @@ public class CustomerController implements ActionListener, ExceptionListener {
 			centerPane.add(cartPane, BorderLayout.CENTER);
 			contentPane.add(centerPane, BorderLayout.CENTER);
 			contentPane.add(confirmPane, BorderLayout.SOUTH);
+			
+			// inner class to create a dialogue to hold the search result
+			class SearchResultDialog extends JDialog {
+				ResultSet rs;
+				ArrayList<Integer> selectedUPCs = new ArrayList<Integer>();
+				ArrayList<Integer> upcList = new ArrayList<Integer>();
+				ArrayList<JCheckBox> checkboxList = new ArrayList<JCheckBox>();
+				
+				public SearchResultDialog(JDialog parentDialog, ResultSet resultSet) {
+					super(parentDialog, "Search results", true);
+					rs = resultSet;
+					//setResizable(false);
+					//setSize(200,200);
+					final NumberFormat numberFormatter = NumberFormat.getNumberInstance();
+					numberFormatter.setMinimumFractionDigits(2);
+					numberFormatter.setMaximumFractionDigits(2);
+					
+					JPanel contentPane = new JPanel(new BorderLayout());
+					setContentPane(contentPane);
+					contentPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+					JPanel resultPane = dialogHelper.createInputPane("Matching items");
+							
+					final JButton addButton = new JButton("Add to shopping cart");
+					
+					contentPane.add(resultPane, BorderLayout.CENTER);
+					contentPane.add(addButton, BorderLayout.SOUTH);
+					
+					// create a table of all purchase item associated with the receipt id
+					String[] columnLabels = {"select", 
+			                 "UPC", "title", "leading singer", 
+			                 "category", "price"};
+					ArrayList< ArrayList<String> > rowList = new ArrayList< ArrayList<String> >();
+					try {
+						while (rs.next()) {
+							ArrayList<String> oneRow = new ArrayList<String>();
+							int upc = rs.getInt("upc");
+							upcList.add(upc);
+							String upcString = Integer.toString(upc);
+							oneRow.add(upcString);
+							String title = rs.getString("title");
+							oneRow.add(title);
+							String singerName = rs.getString("name");
+							oneRow.add(singerName);
+							String category = rs.getString("category");
+							oneRow.add(category);
+							double price = rs.getDouble("price");
+							String priceString = Double.toString( price );
+							oneRow.add(priceString);
+							rowList.add(oneRow);
+							JCheckBox cb = new JCheckBox();
+							checkboxList.add(cb);
+						}
+						rs.close();
+						// add the table to the gui
+						dialogHelper.addOneTableToPanel2(resultPane, columnLabels,
+								        checkboxList, rowList); 
+						//repaint();
+					} catch (SQLException ex) {
+						// TODO Auto-generated catch block
+						//e.printStackTrace();
+						mainGui.updateStatusBar(ex.getMessage());
+					} // 
+				}
+				
+				public ArrayList<Integer> getSelectedItems() {
+					return selectedUPCs;
+				}
+			}
 			
 			// add listeners
 			cancelButton.addActionListener(new ActionListener()
@@ -489,6 +559,18 @@ public class CustomerController implements ActionListener, ExceptionListener {
 						
 						popUpErrorMessage("All three fields are empty!");
 						categoryField.requestFocus();
+					} else {
+						// search itms in the database
+						String category = categoryField.getText().trim();
+						String title = titleField.getText().trim();
+						String singerName = singerField.getText().trim();
+						searchResult = customerModel.searchItem(category, title, singerName);
+						SearchResultDialog searchResultDialog = 
+								new SearchResultDialog(GoShoppingDialog.this, searchResult);
+						searchResultDialog.pack();
+						mainGui.centerWindow(searchResultDialog);
+						searchResultDialog.setVisible(true);
+						return;
 					}
 				}
 			});
@@ -504,6 +586,8 @@ public class CustomerController implements ActionListener, ExceptionListener {
 		}
 		
 	}
+	
+
 	
 	/*
 	 * This event handler gets called when the user selects a menu item

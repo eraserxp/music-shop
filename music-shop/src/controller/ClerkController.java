@@ -440,7 +440,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 		private ArrayList<JTextField> returnQuantityFieldList = new ArrayList<JTextField>();
 		private JTextField returnQuantityField = null;
 		//private JCheckBox removeItem = new JCheckBox("remove");
-		private ArrayList<JCheckBox> checkBoxList = new ArrayList<JCheckBox>();
+		//private ArrayList<JCheckBox> checkBoxList = new ArrayList<JCheckBox>();
 		private ArrayList<Integer> upcList = new ArrayList<Integer>();
 		private ArrayList<Double> priceList = new ArrayList<Double>();
 		private ArrayList<Integer> purchaseQuantityList = null;
@@ -572,25 +572,9 @@ public class ClerkController implements ActionListener, ExceptionListener {
 									returnQuantityField = new JTextField(4);
 									// when you click the field, unselect the confirm return checkbox
 									returnQuantityField.addFocusListener(new UnSelectCheckBox(confirmReturn));
-									//removeItem = new JCheckBox();
-									// when the checkbox is selected, disable the return quantity field
-									//removeItem.addItemListener(new DisableTextField(returnQuantityField));
-									// and unselect the confirm return checkbox
-									// otherwise enable the field
-//									removeItem.addItemListener(new ItemListener() {										
-//										@Override
-//										public void itemStateChanged(ItemEvent e) {
-//											// TODO Auto-generated method stub
-//											JCheckBox cb = (JCheckBox) e.getSource();
-//											if (cb.isSelected()) {
-//												confirmReturn.setSelected(false);
-//											} 
-//										}
-//									});
 									
 									returnQuantityFieldList.add(returnQuantityField);
-									//checkBoxList.add(removeItem);
-									//removeItem.
+									
 								}
 								
 								// add the table to the gui

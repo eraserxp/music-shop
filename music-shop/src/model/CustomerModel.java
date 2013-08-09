@@ -58,7 +58,7 @@ public class CustomerModel {
 			{	 
 				ps = con.prepareStatement("SELECT I.upc, title, name, category, price" 
 						+ " FROM Item I, LeadSinger L " +
-						" where L.upc = I.upc and category = ?" );
+						" where L.upc = I.upc and category = ? and stock > 0" );
 				ps.setString(1, category);
 				rs = ps.executeQuery();
 				return rs; 
@@ -75,7 +75,7 @@ public class CustomerModel {
 			{	 
 				ps = con.prepareStatement("SELECT I.upc, title, name, category, price" 
 						+ " FROM Item I, LeadSinger L " +
-						" where L.upc = I.upc and title = ?" );
+						" where L.upc = I.upc and title = ? and stock > 0" );
 				ps.setString(1, title);
 				rs = ps.executeQuery();
 				return rs; 
@@ -92,7 +92,7 @@ public class CustomerModel {
 			{	 
 				ps = con.prepareStatement("SELECT I.upc, title, name, category, price" 
 						+ " FROM Item I, LeadSinger L" +
-						" where L.upc = I.upc and name = ?" );
+						" where L.upc = I.upc and name = ? and stock > 0" );
 				ps.setString(1, singerName);
 				rs = ps.executeQuery();
 				return rs; 
@@ -109,7 +109,7 @@ public class CustomerModel {
 			{	 
 				ps = con.prepareStatement("SELECT I.upc, title, name, category, price" 
 						+ " FROM Item I, LeadSinger L " +
-						"where L.upc = I.upc and category = ? and title = ?" );
+						"where L.upc = I.upc and category = ? and title = ? and stock > 0" );
 				ps.setString(1, category);
 				ps.setString(2, title);
 				rs = ps.executeQuery();
@@ -127,7 +127,7 @@ public class CustomerModel {
 			{	 
 				ps = con.prepareStatement("SELECT I.upc, title, name, category, price" 
 						+ " FROM Item I, LeadSinger L " +
-						"where L.upc = I.upc and category = ? and name = ?" );
+						"where L.upc = I.upc and category = ? and name = ? and stock > 0" );
 				ps.setString(1, category);
 				ps.setString(2, singerName);
 				rs = ps.executeQuery();
@@ -145,7 +145,7 @@ public class CustomerModel {
 			{	 
 				ps = con.prepareStatement("SELECT I.upc, title, name, category, price" 
 						+ " FROM Item I, LeadSinger L " +
-						"where L.upc = I.upc and title = ? and name = ?" );
+						"where L.upc = I.upc and title = ? and name = ? and stock > 0" );
 				ps.setString(1, title);
 				ps.setString(2, singerName);
 				rs = ps.executeQuery();
@@ -163,7 +163,7 @@ public class CustomerModel {
 			{	 
 				ps = con.prepareStatement("SELECT I.upc, title, name, category, price" 
 						+ " FROM Item I, LeadSinger L " +
-						"where L.upc = I.upc and category=? and title = ? and name = ?" );
+						"where L.upc = I.upc and category=? and title = ? and name = ? and stock > 0" );
 				ps.setString(1, category);
 				ps.setString(2, title);
 				ps.setString(3, singerName);

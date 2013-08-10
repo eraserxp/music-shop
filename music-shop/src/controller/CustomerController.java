@@ -385,6 +385,12 @@ public class CustomerController implements ActionListener, ExceptionListener {
 		ArrayList<JTextField> quantityFieldList = new ArrayList<JTextField>();
 		// mapping <upc, quantity>, use LinkedHashMap to keep insertion order
 		LinkedHashMap<Integer, Integer> shoppingCart = new LinkedHashMap<Integer, Integer>();
+		// to save the upcs for the items in the shopping cart
+		//ArrayList<Integer> upcList = new ArrayList<Integer>();
+		// associate the quantity text field with the corresponding upc
+		LinkedHashMap<JTextField, Integer> quantityFieldUPC = new LinkedHashMap<JTextField, Integer>();
+		JTextField cardNumberField; 
+		JTextField expiryDateField;
 		
 		
 		
@@ -432,6 +438,15 @@ public class CustomerController implements ActionListener, ExceptionListener {
 			JPanel centerPane = new JPanel(new BorderLayout());
 			centerPane.add(searchPane, BorderLayout.NORTH);
 			centerPane.add(cartPane, BorderLayout.CENTER);
+			
+			JPanel paymentPanel = dialogHelper.createInputPane("Payment");
+			cardNumberField = new JTextField(12);
+			expiryDateField = new JTextField(10);
+			dialogHelper.addComponentsToPanel(paymentPanel, "card number (16-digits)", cardNumberField);
+			dialogHelper.addComponentsToPanel(paymentPanel, "expiry date (yyyy-mm)", expiryDateField);
+			
+			centerPane.add(paymentPanel, BorderLayout.SOUTH);
+			
 			contentPane.add(centerPane, BorderLayout.CENTER);
 			contentPane.add(confirmPane, BorderLayout.SOUTH);
 			
@@ -611,6 +626,27 @@ public class CustomerController implements ActionListener, ExceptionListener {
 				}
 			});
 			
+			// check all inputs are reasonable and print a receipt in a new window
+			checkOutButton.addActionListener(new ActionListener() {
+				
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					//check card number and expiery date are not empty
+					String cardNumberString = cardNumberField.getText().trim();
+					String expiryDateString = expiryDateField.getText().trim();
+					if (cardNumberString.length()==0) {
+						popUpErrorMessage("Card number is empty!");
+					} else if (expiryDateString.length()==0) {
+						popUpErrorMessage("Expiry date is empty!");
+					} else { // check all purchase quantity is reasonable
+						for (int i=0; i<quantityFieldList.size(); ++i) {
+							//TO DO
+							
+						}
+					}
+				}
+			});
+			
 		}
 
 		// updates the content of shopping cart and show the shopping cart
@@ -637,12 +673,14 @@ public class CustomerController implements ActionListener, ExceptionListener {
 			}
 			// redrawing the content of the shopping cart in cart pane
 			cartPane.removeAll();
+			quantityFieldUPC.clear();
 			// clean up quantity field list
 			quantityFieldList = new ArrayList<JTextField>();
 			// create a table of all purchase item associated with the receipt id
 			String[] columnLabels = {"purchase quantity", 
 					"upc", "title", "category", "Leading singers", "price", "stock"};
 			ArrayList< ArrayList<String> > rowList = new ArrayList< ArrayList<String> >();
+			//upcList = new ArrayList<Integer>();
 			// iterate over the shopping cart
 			for (int upc:shoppingCart.keySet()) {
 				// obtain the information about the item 
@@ -651,6 +689,7 @@ public class CustomerController implements ActionListener, ExceptionListener {
 					while (rs.next()) {
 						ArrayList<String> oneRow = new ArrayList<String>();
 						int upcInt = rs.getInt("upc");
+						//upcList.add(upcInt);
 						String upcString = Integer.toString(upcInt);
 						oneRow.add(upcString);
 						String title = rs.getString("title");
@@ -669,37 +708,64 @@ public class CustomerController implements ActionListener, ExceptionListener {
 						JTextField quantityField = new JTextField();
 						quantityField.setActionCommand("for_upc_"+upc);
 						quantityField.setText(Integer.toString(shoppingCart.get(upc)));
-						/* add a document listener for the quantity field
-						 * whenever the field values changes, check the validity of the new value
-						 * and update the shopping cart
-						 */
-						quantityField.getDocument().addDocumentListener(new DocumentListener() {
+										
+						quantityFieldList.add(quantityField);
+						// associated the quantity field with its corresponding upc
+						quantityFieldUPC.put(quantityField, upcInt);
+					}
+					
+					rs.close();
+					
+					// listen for the changes in the fields and update the value in shopping cart
+					for (int i=0; i<quantityFieldList.size(); ++i) {
+						quantityFieldList.get(i).addActionListener(new ActionListener() {
 							
 							@Override
-							public void removeUpdate(DocumentEvent e) {
+							public void actionPerformed(ActionEvent e) {
 								// TODO Auto-generated method stub
-								// get the parent textfield for the document change
-								JTextField textField = (JTextField) e.getDocument().getProperty("parent");
-								//if (textField.)
-								
-							}
-							
-							@Override
-							public void insertUpdate(DocumentEvent e) {
-								// TODO Auto-generated method stub
-								
-							}
-							
-							@Override
-							public void changedUpdate(DocumentEvent e) {
-								// TODO Auto-generated method stub
-								
+								JTextField field = (JTextField) e.getSource();
+								int upc = quantityFieldUPC.get(field);
+								int newQuantity = 0;
+								if (field.getText().trim().length()!=0) {
+									newQuantity = Integer.parseInt(field.getText().trim());
+								}
+								//update the shopping cart quantity
+								shoppingCart.put(upc, newQuantity);
 							}
 						});
 						
-						quantityFieldList.add(quantityField);
-					}
-					rs.close();
+						quantityFieldList.get(i).addFocusListener(new FocusListener() {	
+							@Override
+							public void focusGained(FocusEvent e) {
+								// TODO Auto-generated method stub
+								// TODO Auto-generated method stub
+								JTextField field = (JTextField) e.getSource();
+								int upc = quantityFieldUPC.get(field);
+								int newQuantity = 0;
+								if (field.getText().trim().length()!=0) {
+									newQuantity = Integer.parseInt(field.getText().trim());
+								}
+								//update the shopping cart quantity
+								shoppingCart.put(upc, newQuantity);
+							}
+
+							@Override
+							public void focusLost(FocusEvent e) {
+								// TODO Auto-generated method stub
+								// TODO Auto-generated method stub
+								JTextField field = (JTextField) e.getSource();
+								int upc = quantityFieldUPC.get(field);
+								int newQuantity = 0;
+								if (field.getText().trim().length()!=0) {
+									newQuantity = Integer.parseInt(field.getText().trim());
+								}
+								//update the shopping cart quantity
+								shoppingCart.put(upc, newQuantity);
+							}
+						});
+					} // end of for loop for adding the listener for quantity field
+					
+					
 				} catch (SQLException ex) {
 					// TODO Auto-generated catch block
 					//e.printStackTrace();
@@ -712,6 +778,8 @@ public class CustomerController implements ActionListener, ExceptionListener {
 			pack();
 			
 		}
+		
+		
 		
 		@Override
 		public void actionPerformed(ActionEvent arg0) {

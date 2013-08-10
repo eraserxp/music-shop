@@ -731,11 +731,21 @@ public class CustomerController implements ActionListener, ExceptionListener {
 						String title = titleField.getText().trim();
 						String singerName = singerField.getText().trim();
 						searchResult = customerModel.searchItem(category, title, singerName);
-						SearchResultDialog searchResultDialog = 
-								new SearchResultDialog(GoShoppingDialog.this, searchResult);
-						searchResultDialog.pack();
-						mainGui.centerWindow(searchResultDialog);
-						searchResultDialog.setVisible(true);
+						// check if the searchResult is empty
+						try {
+							if (!searchResult.isBeforeFirst()) {
+								popUpOKMessage("No matching items!");
+							} else {
+								SearchResultDialog searchResultDialog = 
+										new SearchResultDialog(GoShoppingDialog.this, searchResult);
+									searchResultDialog.pack();
+									mainGui.centerWindow(searchResultDialog);
+									searchResultDialog.setVisible(true);
+							}
+						} catch (SQLException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 						return;
 					}
 				}

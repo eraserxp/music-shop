@@ -332,7 +332,7 @@ public class CustomerModel {
 	}
 
 	// obtain the expected delivery date for a online purchase processed at the current time
-	// we assume the maximum number of orders that can be delivered in a day is 20
+	// we assume the maximum number of orders that can be delivered in a day is 10
 	public String getExpectedDeliveryDate() {
 		String sqlStatement = "select count(P.receiptId) from purchase P" +
 				" where P.cid is not null and deliveredDate is null";

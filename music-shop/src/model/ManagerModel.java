@@ -3,6 +3,7 @@ import subject_observer.*;
 
 
 import java.sql.*; 
+import java.util.ArrayList;
 
 import javax.swing.event.EventListenerList;
 
@@ -45,10 +46,84 @@ public class ManagerModel {
 		con = MyOracleConnection.getInstance().getConnection();
 	}
 
-	public boolean addItemToStore() {
-		return false;
+	public boolean addNewItem(int upc, String title, String type, String category, String company,
+			                  String year, double price, int quantity, ArrayList<String> singerList,
+			                  ArrayList<String> songList) {
+		try {
+			String sqlStatement = "insert into item values" +
+					"(?, ?, ?, ?, ?, ?, ?)";
+			ps = con.prepareStatement(sqlStatement);
+			ps.setInt(1,upc);
+			ps.setString(2,title);
+			ps.setString(3,type);
+			ps.setString(4,category);
+			ps.setString(5,company);
+			ps.setString(6,year);
+			ps.setDouble(7, price);
+			ps.setInt(8, quantity);
+			ps.executeUpdate();
+			con.commit();
+			return true;
+		} catch (SQLException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+			return false;
+		} 
 		
 	}
+	
+	// update the stock and (or) price of the existing item
+	public boolean updateExistingItem(int upc, Double price, Integer quantity) {
+		if (price==null) {		
+			String sqlStatement = "update  Item set stock=stock+? where upc = ?";
+			try {
+				ps = con.prepareStatement(sqlStatement);
+				ps.setInt(1,quantity);
+				ps.setInt(2,upc);
+				ps.executeUpdate();
+				con.commit();
+				return true;
+			} catch (SQLException ex) {
+				ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+				fireExceptionGenerated(event);
+				return false;
+			} 
+
+		} else if (quantity==null) {
+			String sqlStatement = "update  Item set price=? where upc = ?";
+			try {
+				ps = con.prepareStatement(sqlStatement);
+				ps.setDouble(1,price);
+				ps.setInt(2,upc);
+				ps.executeUpdate();
+				con.commit();
+				return true;
+			} catch (SQLException ex) {
+				ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+				fireExceptionGenerated(event);
+				return false;
+			} 
+
+		} else {
+			String sqlStatement = "update  Item set price=?, stock=stock+? where upc = ?";
+			try {
+				ps = con.prepareStatement(sqlStatement);
+				ps.setDouble(1, price);
+				ps.setInt(2,quantity);
+				ps.setInt(3, upc);
+				ps.executeUpdate();
+				con.commit();
+				return true;
+			} catch (SQLException ex) {
+				ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+				fireExceptionGenerated(event);
+				return false;
+			} 
+		}
+		
+	}
+	
+	
 	
 	public boolean setDeliveryDate() {
 		return false;
@@ -63,6 +138,35 @@ public class ManagerModel {
 	public boolean showTopSellingItems() {
 		return false;
 		
+	}
+	
+	// find out whether a upc exist in the item list (even if its stock = 0)
+	public boolean isUPCExisted(int itemUPC) {
+		//boolean isValid = false;
+		String title = null;
+		ResultSet rs = null;
+		// every item must have a non-null title 
+		String sqlStatement = "select title from Item where upc = ?";
+		try {
+			ps = con.prepareStatement(sqlStatement);
+			ps.setInt(1,itemUPC);
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				title = rs.getString(1);	
+			}
+			con.commit();
+		} catch (SQLException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+		} finally {
+	        try { rs.close(); } catch (Exception ignore) { }
+	    }
+
+		if (title == null) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 	
 	/******************************************************************************

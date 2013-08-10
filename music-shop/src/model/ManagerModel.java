@@ -3,6 +3,8 @@ import subject_observer.*;
 
 
 import java.sql.*; 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 import javax.swing.event.EventListenerList;
@@ -168,12 +170,142 @@ public class ManagerModel {
 		
 	}
 	
+	// check if the receiptId existed in database
+	public boolean isReceiptIdExisted(int receiptId) {
+		int count = 0;
+		ResultSet rs = null;
+		try {
+			ps = con.prepareStatement(
+					"select count(*) from purchase P " +
+					" where P.receiptId = ?"
+					); 
+
+			ps.setInt(1, receiptId);
+			rs = ps.executeQuery();
+			if (rs.next()) {
+				count =  rs.getInt(1);
+			}
+		} catch (SQLException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+			// no need to commit or rollback since it is only a query
+		} finally {
+	        try { rs.close(); } catch (Exception ignore) { }
+	    }
+		
+		if (count==1) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+
+	// check if the receiptId corresponding to an online order
+	public boolean isOnlineOrder(int receiptId) {
+		int count = 0;
+		ResultSet rs = null;
+		try {
+			ps = con.prepareStatement(
+					"select count(*) from purchase P " +
+					" where P.receiptId = ? and cid is not null"
+					); 
+
+			ps.setInt(1, receiptId);
+			rs = ps.executeQuery();
+			if (rs.next()) {
+				count =  rs.getInt(1);
+			}
+		} catch (SQLException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+			// no need to commit or rollback since it is only a query
+		} finally {
+	        try { rs.close(); } catch (Exception ignore) { }
+	    }
+		
+		if (count==1) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 	
 	
-	public boolean setDeliveryDate() {
-		return false;
+	// get the purchase items for receiptId
+	public ResultSet getPurchaseItem(int receiptId) {
+		try
+		{	 
+			ps = con.prepareStatement("SELECT * from purchaseItem where receiptId = ?");
+			ps.setInt(1, receiptId);
+			ResultSet rs = ps.executeQuery();
+			return rs; 
+		} catch (SQLException ex){
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+			// no need to commit or rollback since it is only a query
+			return null; 
+		} 
+	}
+	
+	// get the purchase for receiptId
+	public ResultSet getPurchase(int receiptId) {
+		try
+		{	 
+			ps = con.prepareStatement("SELECT * from purchase where receiptId = ?" );
+			ps.setInt(1, receiptId);
+			ResultSet rs = ps.executeQuery();
+			return rs; 
+		} catch (SQLException ex){
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+			// no need to commit or rollback since it is only a query
+			return null; 
+		} 
+	}
+	
+	// set the delivery date for a online order
+	// note the date must be in the format "yyyy-MM-dd"
+	public boolean setDeliveryDate(int receiptId, String date) {
+		String sqlStatement = "update purchase set deliveredDate=? where receiptId = ?";
+		try {
+			ps = con.prepareStatement(sqlStatement);
+			java.sql.Date deliveredDate = convertStringToDate(date, "yyyy-MM-dd");
+			ps.setDate(1,deliveredDate);
+			ps.setInt(2,receiptId);
+			ps.executeUpdate();
+			con.commit();
+			return true;
+		} catch (SQLException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+			try{
+				con.rollback();
+				return false; 
+			} catch (SQLException ex2) {
+				event = new ExceptionEvent(this, ex2.getMessage());
+				fireExceptionGenerated(event);
+				return false; 
+			}
+		} 
 		
 	}
+	
+	// convert a date string in format to a sql date
+	public java.sql.Date convertStringToDate(String dateString, String format) {
+		SimpleDateFormat fm = new SimpleDateFormat(format);
+		java.util.Date utilDate;
+		try {
+			utilDate = fm.parse(dateString);
+			java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
+			return sqlDate;
+		} catch (ParseException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+		}
+		return null;
+	}
+	
 	
 	public boolean generateDailyReport() {
 		return false;

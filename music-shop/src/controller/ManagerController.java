@@ -18,7 +18,9 @@ import model.ManagerModel;
 
 
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 
 /*
@@ -342,20 +344,7 @@ public class ManagerController implements ActionListener, ExceptionListener {
 									songList.add(field.getText().trim());
 								}								
 							}
-//							System.out.println("upc: " + upc);
-//							System.out.println("title: " + title);
-//							System.out.println("type: " + type);
-//							System.out.println("category: " + category);
-//							System.out.println("company: " + company);
-//							System.out.println("year: " + year);
-//							System.out.println("price: " + price);
-//							System.out.println("quantity: " + quantity);
-//							for (String singer: singerList) {
-//								System.out.println("singer: " + singer);
-//							}
-//							for (String song: songList) {
-//								System.out.println("song: " + song);
-//							}
+
 							// write to the database
 							if (managerModel.addNewItem(upc, title, type, category, company,
 					                  year, price, quantity, singerList,songList)==true) {
@@ -416,9 +405,269 @@ public class ManagerController implements ActionListener, ExceptionListener {
 	 *
 	 */
 	class ProcessDeliveryDialog extends JDialog implements ActionListener {
-
+		JTextField receiptIdField = new JTextField(4);
+		JCheckBox showPurchase = new JCheckBox("show the purchase");
+		JTextField deliveryDateField = new JTextField(10);
+		JPanel purchasePane;
+		JPanel purchaseItemPane;
+		
 		public ProcessDeliveryDialog(ShopGUI shopGUI) {
 			// TODO
+			super(shopGUI, "Set delivery date", true);
+			//setResizable(false);	
+			setSize(500, 500);
+			JPanel contentPane = new JPanel(new BorderLayout());
+			setContentPane(contentPane);			
+			contentPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+			DialogHelper dialogHelper = new DialogHelper();
+			JPanel receiptIdPane = dialogHelper.createInputPane("");
+			dialogHelper.addComponentsToPanel(receiptIdPane, "Enter receipt id", receiptIdField, showPurchase);
+			purchasePane = dialogHelper.createInputPane("Purchase");
+			purchaseItemPane = dialogHelper.createInputPane("Purchase items");
+			JPanel topPane = new JPanel(new BorderLayout());
+			topPane.add(receiptIdPane, BorderLayout.NORTH);
+			topPane.add(purchasePane, BorderLayout.CENTER);
+			topPane.add(purchaseItemPane, BorderLayout.SOUTH);
+			
+			contentPane.add(topPane, BorderLayout.NORTH);
+			
+			final JPanel setDatePane = dialogHelper.createInputPane("Set delivery date (default to the current date)");
+			DialogHelper dialogHelper2 = new DialogHelper();
+			dialogHelper2.addComponentsToPanel(setDatePane, "Enter date (yyyy-mm-dd)", deliveryDateField);
+			
+			contentPane.add(setDatePane, BorderLayout.CENTER);
+			
+			// pane to hold the register and cancel buttons
+			JPanel buttonPanel = new JPanel();
+			buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
+			buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 2));
+			final JButton setButton = new JButton("Set delivery date");				
+			JButton cancelButton = new JButton("Cancel");		
+			dialogHelper.addComponentsToPanel(buttonPanel, setButton, cancelButton);
+			
+			contentPane.add(buttonPanel,BorderLayout.SOUTH);
+			
+			// disable user input
+			for (Component c:setDatePane.getComponents())
+				c.setEnabled(false);
+			setButton.setEnabled(false);
+			
+			// add listeners
+			showPurchase.addItemListener(new ItemListener() {				
+				@Override
+				public void itemStateChanged(ItemEvent arg0) {
+					// TODO Auto-generated method stub
+					if (showPurchase.isSelected()) {
+						
+						// check the validity of receiptId
+						if (receiptIdField.getText().trim().length()==0) {
+							popUpErrorMessage("Receipt id can't be empty!");
+							receiptIdField.requestFocus();
+							receiptIdField.selectAll();
+							// disable user input
+							for (Component c:setDatePane.getComponents())
+								c.setEnabled(false);
+							setButton.setEnabled(false);
+							showPurchase.setSelected(false);
+						} else { // check the existence of receiptId
+							int inputReceiptId = Integer.parseInt(receiptIdField.getText().trim());
+							if (!managerModel.isReceiptIdExisted(inputReceiptId)) {
+								popUpErrorMessage("Receipt id doesn't exist!");
+								receiptIdField.requestFocus();
+								receiptIdField.selectAll();
+								// disable user input
+								for (Component c:setDatePane.getComponents())
+									c.setEnabled(false);
+								setButton.setEnabled(false);
+								receiptIdField.setEnabled(false);
+								// update the content of purchase pane and purchaseItem pane
+								showReceiptContents();
+							} else { // receipt id existed, now check if it is online order
+								if (managerModel.isOnlineOrder(inputReceiptId)) {
+									for (Component c:setDatePane.getComponents())
+										c.setEnabled(true);
+									setButton.setEnabled(true);
+									
+								} 
+								receiptIdField.setEnabled(false);
+								// update the content of purchase pane and purchaseItem pane	
+								showReceiptContents();
+							}
+							
+						} 
+							
+					} else {
+						receiptIdField.setEnabled(true);
+						purchasePane.removeAll();
+						purchaseItemPane.removeAll();
+						// disable user input
+						for (Component c:setDatePane.getComponents())
+							c.setEnabled(false);
+						setButton.setEnabled(false);
+					}
+						
+					
+				}
+			});
+			
+			cancelButton.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e)
+				{
+					dispose();
+					mainGui.updateStatusBar("CANCEL THIS OPERATION");
+				}
+			});
+			
+			// set button to set the delivery date for an online order
+			setButton.addActionListener(new ActionListener() {
+				
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					// TODO Auto-generated method stub
+					String date;
+					int receiptId =Integer.parseInt( receiptIdField.getText().trim() );
+					
+					if (deliveryDateField.getText().trim().length()==0) {
+						date = getCurrentDate("yyyy-MM-dd");
+					} else {
+						date = deliveryDateField.getText().trim();
+					}
+					
+					if (managerModel.setDeliveryDate(receiptId, date)==true) {
+						popUpOKMessage("Set the delivered date successfully!");
+						mainGui.updateStatusBar("Delivered date is set for the oneline purchase" +
+								" with receipt id = " + receiptId + ".");
+						dispose();
+					} else {
+						popUpOKMessage("Failed to set the delivered date successfully!");
+						mainGui.updateStatusBar("Failed to set the delivered date for the oneline purchase" +
+								" with receipt id = " + receiptId + ".");
+						showPurchase.setSelected(false);
+					}
+				}
+			});
+			
+		}
+		
+		private void showReceiptContents() {
+			int inputReceiptId = Integer.parseInt(receiptIdField.getText().trim());
+			// create a table of the purchase associated with the receipt id
+			purchasePane.removeAll();
+			String[] columnLabels = {"receipt id", "purchase date", "cid", "card number", "expiry date",
+	                 "expected delivery date", "delivery date"};
+			ArrayList< ArrayList<String> > rowList = new ArrayList< ArrayList<String> >();
+			
+			ResultSet rs = managerModel.getPurchase(inputReceiptId);
+			// check if rs is empty
+			try {
+				if (rs.isBeforeFirst()) {
+
+					try {
+						while (rs.next()) {
+							ArrayList<String> oneRow = new ArrayList<String>();
+							int receiptId = rs.getInt("receiptID");										
+							String receiptIdString = Integer.toString(receiptId);
+							oneRow.add(receiptIdString);
+							
+							java.sql.Date purchaseDate = rs.getDate("Pdate");	
+							String purchaseDateString = convertSqlDateToString(purchaseDate, "yyyy-MM-dd");
+							oneRow.add(purchaseDateString);
+							
+							String cid = rs.getString("cid");
+							if (rs.wasNull())
+								cid = "null";
+							oneRow.add(cid);
+							
+							String cardNo = rs.getString("cardN");
+							if (rs.wasNull())
+								cardNo = "null";
+							oneRow.add(cardNo);
+							
+							String expiryDate = rs.getString("expiryDate");
+							if (rs.wasNull())
+								expiryDate = "null";
+							oneRow.add(expiryDate);
+							
+							java.sql.Date expectedDate = rs.getDate("expectedDate");
+							String expectedDateString;
+							if (rs.wasNull()) {
+								expectedDateString = "null";
+							} else {
+								expectedDateString = convertSqlDateToString(expectedDate, "yyyy-MM-dd");
+							}
+							oneRow.add(expectedDateString);
+							
+							java.sql.Date deliveredDate = rs.getDate("deliveredDate");	
+							String deliveredDateString;
+							if (rs.wasNull()) {
+								deliveredDateString = "null";
+							} else {
+								deliveredDateString = convertSqlDateToString(deliveredDate, "yyyy-MM-dd");
+							}
+							oneRow.add(deliveredDateString);
+							
+							rowList.add(oneRow);
+						}
+					
+						DialogHelper dialogHelper = new DialogHelper();
+						// add the table to the gui
+						dialogHelper.addOneTableToPanel(purchasePane, columnLabels,rowList); 
+					} catch (SQLException ex) {
+						// TODO Auto-generated catch block
+						//e.printStackTrace();
+						mainGui.updateStatusBar(ex.getMessage());
+					} // end of try catch block
+
+				}
+			} catch (SQLException ex) {
+				// TODO Auto-generated catch block
+				mainGui.updateStatusBar(ex.getMessage());
+				//ex.printStackTrace();
+			}
+			
+			purchaseItemPane.removeAll();
+			// create a table of all purchase item associated with the receipt id
+			String[] columnLabels2 = {"receipt id", 
+	                 "UPC", "purchase quantity"};
+	                 
+			ArrayList< ArrayList<String> > rowList2 = new ArrayList< ArrayList<String> >();
+			
+			ResultSet rs2 = managerModel.getPurchaseItem(inputReceiptId);
+			// check if rs is empty
+			try {
+				if (rs2.isBeforeFirst()) {
+
+					try {
+						while (rs2.next()) {
+							ArrayList<String> oneRow = new ArrayList<String>();
+							int receiptId = rs2.getInt("receiptId");										
+							String receiptIdString = Integer.toString(receiptId);
+							oneRow.add(receiptIdString);
+							int upc = rs2.getInt("upc");										
+							String upcString = Integer.toString(upc);
+							oneRow.add(upcString);
+							int purchaseQuantity = rs2.getInt("quantity");
+							String quantityString = Integer.toString(purchaseQuantity);
+							oneRow.add(quantityString);
+							rowList2.add(oneRow);
+						}
+					
+						DialogHelper dialogHelper = new DialogHelper();
+						// add the table to the gui
+						dialogHelper.addOneTableToPanel(purchaseItemPane, columnLabels2,rowList2); 
+					} catch (SQLException ex) {
+						// TODO Auto-generated catch block
+						//e.printStackTrace();
+						mainGui.updateStatusBar(ex.getMessage());
+					} // end of try catch block
+
+				}
+			} catch (SQLException ex) {
+				// TODO Auto-generated catch block
+				mainGui.updateStatusBar(ex.getMessage());
+				//ex.printStackTrace();
+			}
+			pack();
 		}
 		
 		@Override
@@ -500,14 +749,26 @@ public class ManagerController implements ActionListener, ExceptionListener {
 			dialog.setVisible(true);
 			return;
 		} else if (actionCommand.equals(ShopGUI.PROCESS_DELIVERY)) {
-			
+			mainGui.updateStatusBar("SET DELIVERY DATE .......");
+			ProcessDeliveryDialog dialog = new ProcessDeliveryDialog(mainGui);
+			dialog.pack();
+			mainGui.centerWindow(dialog);
+			dialog.setVisible(true);
 			return; 
 		} else if (actionCommand.equals(ShopGUI.GENERATE_DAILY_REPORT)) {
-			// TODO
-			return;
+			mainGui.updateStatusBar("GENERATE DAILY SALE REPORT .......");
+			GenerateDailyReportDialog dialog = new GenerateDailyReportDialog(mainGui);
+			dialog.pack();
+			mainGui.centerWindow(dialog);
+			dialog.setVisible(true);
+			return; 
 		} else if (actionCommand.equals(ShopGUI.SHOW_TOP_SELLING_ITEMS)) {
-			// TODO
-			return;
+			mainGui.updateStatusBar("SHOW TOP SELLING ITEMS .......");
+			ShowTopSellingItemsDialog dialog = new ShowTopSellingItemsDialog(mainGui);
+			dialog.pack();
+			mainGui.centerWindow(dialog);
+			dialog.setVisible(true);
+			return; 
 		}
 	}
 
@@ -529,5 +790,19 @@ public class ManagerController implements ActionListener, ExceptionListener {
 		errorPopup.showMessageDialog(null, message, "OK", JOptionPane.INFORMATION_MESSAGE);
 	}
 	
+	// get the current date in format
+	// format is usually "yyyy-MM-dd"
+	private String getCurrentDate(String format) {
+		SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+		// get the current date
+		Date date = new Date();
+		return dateFormat.format(date);
+	}
+	
+	// convert sql date to string in the format of "yyyy-MM-dd"
+	private String convertSqlDateToString(java.sql.Date date, String format) {
+		SimpleDateFormat dateFormat = new SimpleDateFormat(format);		
+		return dateFormat.format((java.util.Date) date);
+	}
 	
 }

@@ -25,7 +25,7 @@ public class ShopGUI extends JFrame {
 	public static String GO_SHOPPING = "Go shopping";
 	// action command for manager
 	public static String ADD_ITEM_TO_STORE = "Add item to store";
-	public static String PROCESS_DELIVERY = "Process delivery";
+	public static String PROCESS_DELIVERY = "See purchase/Set delivery date";
 	public static String GENERATE_DAILY_REPORT = "Generate daily report";
 	public static String SHOW_TOP_SELLING_ITEMS = "Show top selling items";
 	

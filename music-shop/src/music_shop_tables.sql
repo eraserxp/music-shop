@@ -16,7 +16,7 @@ create table Item(
 	type  varchar(10) not null,
 	category varchar(20) not null,
 	company varchar(40) not null,
-	year char(4) not null,
+	year varchar(4) not null,
 	price float not null,
 	stock int not null,
 	PRIMARY KEY (upc)

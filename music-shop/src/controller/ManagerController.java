@@ -92,7 +92,7 @@ public class ManagerController implements ActionListener, ExceptionListener {
 			dialogHelper.addComponentsToPanel2(otherInfoPane, "Choose type", typeComboBox);
 			dialogHelper.addComponentsToPanel2(otherInfoPane, "Choose category", CategoryComboBox);
 			dialogHelper.addComponentsToPanel2(otherInfoPane, "Enter company", companyField);
-			dialogHelper.addComponentsToPanel2(otherInfoPane, "Enter year", yearField);
+			dialogHelper.addComponentsToPanel2(otherInfoPane, "Enter year(yyyy)", yearField);
 			dialogHelper.addComponentsToPanel2(otherInfoPane, "Enter price", priceField);
 			dialogHelper.addComponentsToPanel2(otherInfoPane, "Enter quantity", quantityField);
 
@@ -281,22 +281,23 @@ public class ManagerController implements ActionListener, ExceptionListener {
 								popUpOKMessage("Update the item information successfully!");
 								mainGui.updateStatusBar("Update the item" +"(upc=" + upc + ") "
 										+ "successfully!");
-								quantityField.setText("");
-								priceField.setText("");
-								upcField.setText("");
-								for (Component c:otherInfoPane.getComponents())
-									c.setEnabled(false);
-								for (Component c:singerPaneTop.getComponents())
-									c.setEnabled(false);
-								for (Component c:singerPaneBottom.getComponents())
-									c.setEnabled(false);
-								for (Component c:songPaneTop.getComponents())
-									c.setEnabled(false);
-								for (Component c:songPaneBottom.getComponents())
-									c.setEnabled(false);
-								upcField.setEnabled(true);
-								addButton.setEnabled(false);
-								confirmUPC.setSelected(false);
+//								quantityField.setText("");
+//								priceField.setText("");
+//								upcField.setText("");
+//								for (Component c:otherInfoPane.getComponents())
+//									c.setEnabled(false);
+//								for (Component c:singerPaneTop.getComponents())
+//									c.setEnabled(false);
+//								for (Component c:singerPaneBottom.getComponents())
+//									c.setEnabled(false);
+//								for (Component c:songPaneTop.getComponents())
+//									c.setEnabled(false);
+//								for (Component c:songPaneBottom.getComponents())
+//									c.setEnabled(false);
+//								upcField.setEnabled(true);
+//								addButton.setEnabled(false);
+//								confirmUPC.setSelected(false);
+								dispose();
 							} else {
 								popUpErrorMessage("Failed to update the item information!");
 								mainGui.updateStatusBar("Failed to update the item" +"(upc=" + upc + "). ");
@@ -326,8 +327,8 @@ public class ManagerController implements ActionListener, ExceptionListener {
 							String type = allowedTypes[typeComboBox.getSelectedIndex()];
 							String category = allowedCategories[CategoryComboBox.getSelectedIndex()];
 							String company = companyField.getText().trim();
-							int year = Integer.parseInt(yearField.getText().trim() );
-							Double price = Double.parseDouble(priceField.getText().trim());
+							String year = yearField.getText().trim();
+							double price = Double.parseDouble(priceField.getText().trim());
 							int quantity = Integer.parseInt(quantityField.getText().trim());
 							ArrayList<String> singerList = new ArrayList<String>();
 							for (JTextField field:singerFieldList) {
@@ -341,7 +342,56 @@ public class ManagerController implements ActionListener, ExceptionListener {
 									songList.add(field.getText().trim());
 								}								
 							}
+//							System.out.println("upc: " + upc);
+//							System.out.println("title: " + title);
+//							System.out.println("type: " + type);
+//							System.out.println("category: " + category);
+//							System.out.println("company: " + company);
+//							System.out.println("year: " + year);
+//							System.out.println("price: " + price);
+//							System.out.println("quantity: " + quantity);
+//							for (String singer: singerList) {
+//								System.out.println("singer: " + singer);
+//							}
+//							for (String song: songList) {
+//								System.out.println("song: " + song);
+//							}
 							// write to the database
+							if (managerModel.addNewItem(upc, title, type, category, company,
+					                  year, price, quantity, singerList,songList)==true) {
+								popUpOKMessage("Add the new item successfully!");
+								mainGui.updateStatusBar("Add the new item" +"(upc=" + upc + ") "
+										+ "successfully!");
+//								quantityField.setText("");
+//								priceField.setText("");
+//								upcField.setText("");
+//								companyField.setText("");
+//								yearField.setText("");
+//								titleField.setText("");
+//								for (JTextField singerField: singerFieldList){
+//									singerField.setText("");
+//								}
+//								for (JTextField songField: songFieldList){
+//									songField.setText("");
+//								}
+//								for (Component c:otherInfoPane.getComponents())
+//									c.setEnabled(false);
+//								for (Component c:singerPaneTop.getComponents())
+//									c.setEnabled(false);
+//								for (Component c:singerPaneBottom.getComponents())
+//									c.setEnabled(false);
+//								for (Component c:songPaneTop.getComponents())
+//									c.setEnabled(false);
+//								for (Component c:songPaneBottom.getComponents())
+//									c.setEnabled(false);
+//								upcField.setEnabled(true);
+//								addButton.setEnabled(false);
+//								confirmUPC.setSelected(false);
+								dispose();
+							} else {
+								popUpErrorMessage("Failed to add the new item!");
+								mainGui.updateStatusBar("Failed to add the new item" +"(upc=" + upc + "). ");
+							}
 						}
 						
 					}
@@ -421,6 +471,18 @@ public class ManagerController implements ActionListener, ExceptionListener {
 	@Override
 	public void exceptionGenerated(ExceptionEvent ex) {
 		// TODO Auto-generated method stub
+		String message = ex.getMessage();
+		// annoying beep sound
+		Toolkit.getDefaultToolkit().beep();
+
+		if (message != null)
+		{	
+			mainGui.updateStatusBar(ex.getMessage());
+		}
+		else
+		{
+			mainGui.updateStatusBar("An exception occurred!");
+		}
 		
 	}
 

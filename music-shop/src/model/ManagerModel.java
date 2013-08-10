@@ -51,7 +51,7 @@ public class ManagerModel {
 			                  ArrayList<String> songList) {
 		try {
 			String sqlStatement = "insert into item values" +
-					"(?, ?, ?, ?, ?, ?, ?)";
+					"(?, ?, ?, ?, ?, ?, ?, ?)";
 			ps = con.prepareStatement(sqlStatement);
 			ps.setInt(1,upc);
 			ps.setString(2,title);
@@ -62,12 +62,35 @@ public class ManagerModel {
 			ps.setDouble(7, price);
 			ps.setInt(8, quantity);
 			ps.executeUpdate();
+			// insert into LeadSinger table
+			sqlStatement = "insert into LeadSinger values (?, ?)";
+			ps = con.prepareStatement(sqlStatement);
+			for (String singer: singerList) {
+				ps.setInt(1, upc);
+				ps.setString(2, singer);
+				ps.executeUpdate();
+			}
+			// insert into HasSong table
+			sqlStatement = "insert into HasSong values (?, ?)";
+			ps = con.prepareStatement(sqlStatement);
+			for (String song: songList) {
+				ps.setInt(1, upc);
+				ps.setString(2, song);
+				ps.executeUpdate();
+			}
 			con.commit();
 			return true;
 		} catch (SQLException ex) {
 			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
 			fireExceptionGenerated(event);
-			return false;
+			try{
+				con.rollback();
+				return false; 
+			} catch (SQLException ex2) {
+				event = new ExceptionEvent(this, ex2.getMessage());
+				fireExceptionGenerated(event);
+				return false; 
+			}
 		} 
 		
 	}
@@ -86,7 +109,14 @@ public class ManagerModel {
 			} catch (SQLException ex) {
 				ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
 				fireExceptionGenerated(event);
-				return false;
+				try{
+					con.rollback();
+					return false; 
+				} catch (SQLException ex2) {
+					event = new ExceptionEvent(this, ex2.getMessage());
+					fireExceptionGenerated(event);
+					return false; 
+				}
 			} 
 
 		} else if (quantity==null) {
@@ -101,7 +131,14 @@ public class ManagerModel {
 			} catch (SQLException ex) {
 				ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
 				fireExceptionGenerated(event);
-				return false;
+				try{
+					con.rollback();
+					return false; 
+				} catch (SQLException ex2) {
+					event = new ExceptionEvent(this, ex2.getMessage());
+					fireExceptionGenerated(event);
+					return false; 
+				}
 			} 
 
 		} else {
@@ -117,7 +154,15 @@ public class ManagerModel {
 			} catch (SQLException ex) {
 				ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
 				fireExceptionGenerated(event);
-				return false;
+				try{
+					con.rollback();
+					return false; 
+				} catch (SQLException ex2) {
+					event = new ExceptionEvent(this, ex2.getMessage());
+					fireExceptionGenerated(event);
+					return false; 
+				}
+				
 			} 
 		}
 		

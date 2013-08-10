@@ -360,6 +360,18 @@ public class CustomerController implements ActionListener, ExceptionListener {
 	@Override
 	public void exceptionGenerated(ExceptionEvent ex) {
 		// TODO Auto-generated method stub
+		String message = ex.getMessage();
+		// annoying beep sound
+		Toolkit.getDefaultToolkit().beep();
+
+		if (message != null)
+		{	
+			mainGui.updateStatusBar(ex.getMessage());
+		}
+		else
+		{
+			mainGui.updateStatusBar("An exception occurred!");
+		}
 		
 	}
 

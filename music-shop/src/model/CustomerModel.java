@@ -4,7 +4,7 @@ import subject_observer.*;
 import java.sql.*; 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.util.*;
 
 import javax.swing.event.EventListenerList;
 
@@ -67,6 +67,37 @@ public class CustomerModel {
 	}
 	
 	
+	// obtain the next receiptID and decrement it by 1 in the database
+	// so that this function will not change the nextval of the sequence
+	public int getNextReceiptID() {
+		int nextReceiptID = 0; 
+		ResultSet rs = null;
+		String getNext = "select receiptID_counter.nextval from dual";
+		String decrementByOne = "alter sequence receiptID_counter increment by -1";
+		String resetToOriginal = "select receiptID_counter.nextval from dual";
+		String incrementByOne = "alter sequence receiptID_counter increment by 1";
+		
+		try {
+			Statement stmt = con.createStatement();
+			rs = stmt.executeQuery(getNext);
+			while (rs.next()) {
+				nextReceiptID = rs.getInt(1);	
+			}
+			con.commit();
+			stmt.executeQuery(decrementByOne);
+			con.commit();
+			stmt.executeQuery(resetToOriginal);
+			con.commit();
+			stmt.executeQuery(incrementByOne);
+			con.commit();
+		} catch (SQLException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+		} finally {
+	        try { rs.close(); } catch (Exception ignore) { }
+	    }
+		return nextReceiptID;
+	}
 	
 	// search items with given category, title, and singerName
 	// any of three input can be empty string, but there must be at least one is not empty
@@ -252,6 +283,36 @@ public class CustomerModel {
 		}
 	}
 
+	// obtain the expected delivery date for a online purchase processed at the current time
+	// we assume the maximum number of orders that can be delivered in a day is 20
+	public String getExpectedDeliveryDate() {
+		String sqlStatement = "select count(P.receiptId) from purchase P" +
+				" where P.cid is not null and deliveredDate is null";
+		ResultSet rs = null;
+		int undeliveredOrder = 0;
+		int maxOrdersPerDay = 10;
+		
+		try {
+			Statement stmt = con.createStatement();
+			rs = stmt.executeQuery(sqlStatement);
+			while (rs.next()) {
+				undeliveredOrder = rs.getInt(1);	
+			}
+			con.commit();
+		} catch (SQLException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+		} finally {
+	        try { rs.close(); } catch (Exception ignore) { }
+	    }
+		GregorianCalendar gregCalendar = new GregorianCalendar();
+		
+		int daysToAdd = undeliveredOrder/maxOrdersPerDay;
+		// add days to current date
+		gregCalendar.add(Calendar.DATE, daysToAdd);
+		java.sql.Date sqlDate = new java.sql.Date(gregCalendar.getTime().getTime());
+		return sqlDate.toString();
+	}
 	
 	// obtain the stok quantity of an item
 	public int queryItemQuantity(int itemUPC) {

@@ -23,7 +23,9 @@ import view.ShopGUI;
 
 import java.sql.*;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
@@ -426,29 +428,35 @@ public class CustomerController implements ActionListener, ExceptionListener {
 			cartPane = dialogHelper.createInputPane("Shopping cart");
 			
 			// the pane to allow the user to check out
-			JPanel confirmPane = new JPanel();
-			confirmPane.setLayout(new BoxLayout(confirmPane, BoxLayout.X_AXIS));
-			confirmPane.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 2));
+			JPanel buttonPane = new JPanel();
+			buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.X_AXIS));
+			buttonPane.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 2));
 			final JButton checkOutButton = new JButton("Check out");
 			checkOutButton.setEnabled(false);
 			JButton cancelButton = new JButton("Cancel");			
-			dialogHelper.addComponentsToPanel(confirmPane, checkOutButton, cancelButton);
+			dialogHelper.addComponentsToPanel(buttonPane, checkOutButton, cancelButton);
 			
 			contentPane.add(loginPane, BorderLayout.NORTH);
 			JPanel centerPane = new JPanel(new BorderLayout());
 			centerPane.add(searchPane, BorderLayout.NORTH);
 			centerPane.add(cartPane, BorderLayout.CENTER);
 			
-			JPanel paymentPanel = dialogHelper.createInputPane("Payment");
+			final JPanel paymentPanel = dialogHelper.createInputPane("Payment");
 			cardNumberField = new JTextField(12);
 			expiryDateField = new JTextField(10);
 			dialogHelper.addComponentsToPanel(paymentPanel, "card number (16-digits)", cardNumberField);
 			dialogHelper.addComponentsToPanel(paymentPanel, "expiry date (yyyy-mm)", expiryDateField);
 			
+			final JCheckBox confirmCheckbox = new JCheckBox("Confirm purchase");
+			JPanel bottomPane = new JPanel(new BorderLayout());
+			bottomPane.add(confirmCheckbox, BorderLayout.NORTH);
+			bottomPane.add(buttonPane, BorderLayout.SOUTH);
+			
 			centerPane.add(paymentPanel, BorderLayout.SOUTH);
 			
 			contentPane.add(centerPane, BorderLayout.CENTER);
-			contentPane.add(confirmPane, BorderLayout.SOUTH);
+			contentPane.add(bottomPane, BorderLayout.SOUTH);
+
 			
 			// inner class to create a dialogue to hold the search result
 			class SearchResultDialog extends JDialog {
@@ -539,6 +547,8 @@ public class CustomerController implements ActionListener, ExceptionListener {
 				
 			}
 			
+			checkOutButton.addActionListener(this);
+			
 			// add listeners
 			cancelButton.addActionListener(new ActionListener()
 			{
@@ -627,28 +637,80 @@ public class CustomerController implements ActionListener, ExceptionListener {
 			});
 			
 			// check all inputs are reasonable and print a receipt in a new window
-			checkOutButton.addActionListener(new ActionListener() {
-				
+			confirmCheckbox.addItemListener(new ItemListener() {				
 				@Override
-				public void actionPerformed(ActionEvent arg0) {
-					//check card number and expiery date are not empty
-					String cardNumberString = cardNumberField.getText().trim();
-					String expiryDateString = expiryDateField.getText().trim();
-					if (cardNumberString.length()==0) {
-						popUpErrorMessage("Card number is empty!");
-					} else if (expiryDateString.length()==0) {
-						popUpErrorMessage("Expiry date is empty!");
-					} else { // check all purchase quantity is reasonable
-						for (int i=0; i<quantityFieldList.size(); ++i) {
-							//TO DO
-							
+				public void itemStateChanged(ItemEvent ie) {
+					// TODO Auto-generated method stub
+					JCheckBox cb = (JCheckBox) ie.getItem();
+					if (cb.isSelected()) {
+						//check card number and expiery date are not empty
+						String cardNumberString = cardNumberField.getText().trim();
+						String expiryDateString = expiryDateField.getText().trim();
+						if (cardNumberString.length()==0) {
+							popUpErrorMessage("Card number is empty!");
+						} else if (expiryDateString.length()==0) {
+							popUpErrorMessage("Expiry date is empty!");
+						} else { // check all purchase quantity is reasonable
+							if (checkQuantityValidity()==true) {
+								//lock all input fields
+								for (Component c : searchPane.getComponents()) 
+									c.setEnabled(false);
+								for (Component c : cartPane.getComponents()) 
+									c.setEnabled(false);
+								for (Component c : paymentPanel.getComponents()) 
+									c.setEnabled(false);
+								
+								checkOutButton.setEnabled(true);
+							} else {
+								confirmCheckbox.setSelected(false);
+							}
 						}
+					} else {
+						//enable the relevant text fields and buttons
+						//lock all input fields
+						for (Component c : searchPane.getComponents()) 
+							c.setEnabled(true);
+						for (Component c : cartPane.getComponents()) 
+							c.setEnabled(true);
+						for (Component c : paymentPanel.getComponents()) 
+							c.setEnabled(true);
+						
+						checkOutButton.setEnabled(false);
 					}
 				}
+				
 			});
+			
 			
 		}
 
+		// process the purchase
+		
+		
+		// check the values inside the quantity fields are valid
+		private boolean checkQuantityValidity() {
+			for (int i=0; i<quantityFieldList.size(); ++i) {
+				JTextField field = quantityFieldList.get(i);
+				int upc = quantityFieldUPC.get(field);
+				int newQuantity = 0;
+				if (field.getText().trim().length()!=0) {
+					newQuantity = Integer.parseInt(field.getText().trim());
+				}
+				
+				if (newQuantity>customerModel.queryItemQuantity(upc)) {
+					popUpErrorMessage("Purchase quantity for item with upc=" + upc
+							+ " is larger than stock quantity!");
+					field.requestFocus();
+					field.selectAll();
+					return false;
+				} else {
+					//update the shopping cart quantity
+					shoppingCart.put(upc, newQuantity);
+				}
+			}
+			return true;
+		}
+		
 		// updates the content of shopping cart and show the shopping cart
 		private void updateCartPanel() {
 			/* update the shopping cart according to itemsSelection 
@@ -781,10 +843,42 @@ public class CustomerController implements ActionListener, ExceptionListener {
 		
 		
 		
+		// when checkout button is pressed, insert the purchase into database
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			// TODO Auto-generated method stub
+			int receiptId = customerModel.getNextReceiptID();
+			ArrayList<Integer> upcList = new ArrayList<Integer>();
+			ArrayList<Integer> quantityList = new ArrayList<Integer>();
+			for (int upc:shoppingCart.keySet()) {
+				if (shoppingCart.get(upc)>0) {
+					upcList.add(upc);
+					quantityList.add(shoppingCart.get(upc));
+				}
+			}
+			String dateString = getCurrentDate("yyyy-MM-dd") ;
+			String cardNumber = cardNumberField.getText().trim();
+			String expiryDate = expiryDateField.getText().trim();
+			String expectedDateString = customerModel.getExpectedDeliveryDate();
+			System.out.println("Date:" + expectedDateString); // for test
+			String deliveredDateString = null;
 			
+			if (
+				customerModel.processPurchase(receiptId, dateString, cid,
+                            cardNumber, expiryDate, 
+                            expectedDateString, deliveredDateString, 
+                            upcList, quantityList) == true 
+                ) {
+				
+				popUpOKMessage("The purchase is successful!");
+				mainGui.updateStatusBar("Purchase operation is successful!"
+				                        + " Receipt id is " + receiptId + "\n");
+				// close the window
+				dispose();
+			} else {
+				mainGui.updateStatusBar("Purchase operation is failed!\n");
+				popUpErrorMessage("Failed to process this purchase!");
+			}
 		}
 		
 	}
@@ -816,6 +910,14 @@ public class CustomerController implements ActionListener, ExceptionListener {
 		} 
 	}
 	
+	// get the current date in format
+	// format is usually "yyyy-MM-dd"
+	private String getCurrentDate(String format) {
+		SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+		// get the current date
+		Date date = new Date();
+		return dateFormat.format(date);
+	}
 	
 	// create a pop up window showing the error message
 	private void popUpErrorMessage(String message) {

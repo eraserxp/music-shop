@@ -44,6 +44,54 @@ public class CustomerModel {
 		con = MyOracleConnection.getInstance().getConnection();
 	}
 
+	
+	// obtain the title given the item UPC
+	public String queryTitle(int itemUPC) {
+		String title = null; 
+		ResultSet rs = null;
+		String sqlStatement = "select title from Item where upc = ?";
+		                      
+		try {
+			ps = con.prepareStatement(sqlStatement);
+			ps.setInt(1,itemUPC);
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				title = rs.getString("title");	
+			}
+			con.commit();
+		} catch (SQLException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+		} finally {
+	        try { rs.close(); } catch (Exception ignore) { }
+	    }
+		return title;
+	}
+	
+	// obtain the unit price given the UPC of the item
+	public double queryItemPrice(int itemUPC) {
+		double unitPrice = 0.0; 
+		ResultSet rs = null;
+		String sqlStatement = "select price from Item where upc = ?";
+		                      
+		try {
+			ps = con.prepareStatement(sqlStatement);
+			ps.setInt(1,itemUPC);
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				unitPrice = rs.getDouble("price");	
+			}
+			con.commit();
+		} catch (SQLException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+		} finally {
+	        try { rs.close(); } catch (Exception ignore) { }
+	    }
+		return unitPrice;
+	}
+
+	
     // get an item given its upc
 	public ResultSet getItem(int upc) {
 		ResultSet rs = null;

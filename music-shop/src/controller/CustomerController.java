@@ -376,8 +376,14 @@ public class CustomerController implements ActionListener, ExceptionListener {
 		final JTextField titleField = new JTextField(20);
 		final JTextField singerField = new JTextField(10);
 		final JButton searchButton = new JButton("search");
+		String dateString = null;
+		String cardNumber = null;
+		String expiryDate = null;
+		String expectedDateString = null;
 		ResultSet searchResult = null;
 		String cid = null; // to record the username
+		ArrayList<Integer> upcList = new ArrayList<Integer>();
+		ArrayList<Integer> quantityList = new ArrayList<Integer>();
 		// to record the upc of items that are already in cart
 		ArrayList<Integer> itemsInCart =  new ArrayList<Integer>();
 		// record a selection of items (upc) through the search result dialog
@@ -545,9 +551,108 @@ public class CustomerController implements ActionListener, ExceptionListener {
 					return selectedUPCs;
 				}
 				
-			}
+			};
 			
-			checkOutButton.addActionListener(this);
+			
+			
+			// inner class to create a dialog to show the receipt
+			class ShowReceiptDialog extends JDialog {
+				
+				public ShowReceiptDialog(JDialog parentDialog) {
+					super(parentDialog, "Receipt", true);
+					JPanel contentPane = new JPanel(new BorderLayout());
+					setContentPane(contentPane);
+					contentPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+					JPanel receiptPanel = dialogHelper.createInputPane("Summary of purchase");
+							
+					final JButton closeButton = new JButton("Close");
+					
+					contentPane.add(receiptPanel, BorderLayout.CENTER);
+					contentPane.add(closeButton, BorderLayout.SOUTH);
+					
+					int upcInt;
+					String title;
+					int quantity = 1;					
+					int totalQuantity = 0;
+					double unitPrice;
+					double subtotal; 
+					double totalAmount = 0.0;
+					// set the decimal digits to be 2
+					NumberFormat numberFormatter = NumberFormat.getNumberInstance();
+					numberFormatter.setMinimumFractionDigits(2);
+					numberFormatter.setMaximumFractionDigits(2);
+					
+					String fieldNames[] = {"UPC", "Title", "quantity", "unit Price", 
+							               "subtotal"};
+					// add the field names as the first row 
+					dialogHelper.addOneRowToPanel(receiptPanel, fieldNames);
+
+					// show upc, title, quantity, unit price and subtotal for each item
+					itemLoop:
+					for (int i=0; i<upcList.size(); ++i) {
+						int upc = upcList.get(i); 
+						String upcString = Integer.toString(upc);
+
+						unitPrice = customerModel.queryItemPrice(upc);
+						title = customerModel.queryTitle(upc);
+						quantity = shoppingCart.get(upc);
+						subtotal = quantity*unitPrice;
+						totalAmount += subtotal;
+						totalQuantity += quantity;
+						String fieldValues[] = {upcString, title, 
+									String.valueOf(quantity),
+									String.valueOf(unitPrice),
+									numberFormatter.format(subtotal)};
+						dialogHelper.addOneRowToPanel(receiptPanel, fieldValues);							
+					} // end of for loop
+					
+
+					
+					// add a blank line
+					String blanks[] = {"  ",  "  ",  "  ",  "   ",  " " }; 
+					dialogHelper.addOneRowToPanel(receiptPanel, blanks);
+					
+
+					// add the summary for the purchase
+					String summary[] = {
+							   "SUMMARY", 
+							    "receipt id: " + customerModel.getNextReceiptID(),							    
+					           "total quantity: " + totalQuantity, 
+					           "    ", 
+					           "total amount: " + numberFormatter.format(totalAmount)
+					           }; 
+					
+					dialogHelper.addOneRowToPanel(receiptPanel, summary);
+					String dateString = getCurrentDate("yyyy-MM-dd");
+					int len = cardNumberField.getText().trim().length();
+					String cardNo;
+					if (len==0) {
+						cardNo = "null";
+					} else {
+						cardNo = "***" + cardNumberField.getText().trim().substring(len-5, len);
+					}
+					String dateAndCardNo[] = {
+							"     ",
+							"date: " + dateString,
+							"expected delivery date: " + expectedDateString,
+							"      ",
+							"card num: " + cardNo
+					};
+					dialogHelper.addOneRowToPanel(receiptPanel, dateAndCardNo);
+					
+					// close the show receipt dialog and the go shopping dialog
+					closeButton.addActionListener(new ActionListener() {						
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							GoShoppingDialog.this.dispose();							
+						}
+					});
+					
+				} // end of constructor
+			}; // end of inner class ShowReceiptDialog definition
+			
+			
+			//checkOutButton.addActionListener(this);
 			
 			// add listeners
 			cancelButton.addActionListener(new ActionListener()
@@ -679,6 +784,54 @@ public class CustomerController implements ActionListener, ExceptionListener {
 					}
 				}
 				
+			});
+			
+			// when checkout button is pressed, show the receipt dialog, insert the purchase into database
+			checkOutButton.addActionListener(new ActionListener() {
+				
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					int receiptId = customerModel.getNextReceiptID();
+					upcList = new ArrayList<Integer>();
+					quantityList = new ArrayList<Integer>();
+					for (int upc:shoppingCart.keySet()) {
+						if (shoppingCart.get(upc)>0) {
+							upcList.add(upc);
+							quantityList.add(shoppingCart.get(upc));
+						}
+					}
+					dateString = getCurrentDate("yyyy-MM-dd") ;
+					cardNumber = cardNumberField.getText().trim();
+					expiryDate = expiryDateField.getText().trim();
+					expectedDateString = customerModel.getExpectedDeliveryDate();
+					System.out.println("Date:" + expectedDateString); // for test
+					String deliveredDateString = null;
+					
+					if (
+						customerModel.processPurchase(receiptId, dateString, cid,
+		                            cardNumber, expiryDate, 
+		                            expectedDateString, deliveredDateString, 
+		                            upcList, quantityList) == true 
+		                ) {
+						
+						//popUpOKMessage("The purchase is successful!");
+						// generate receipt and show the receipt
+						ShowReceiptDialog showReceiptDialog = 
+								new ShowReceiptDialog(GoShoppingDialog.this);
+						showReceiptDialog.pack();
+						mainGui.centerWindow(showReceiptDialog);
+						showReceiptDialog.setVisible(true);						
+						mainGui.updateStatusBar("Purchase operation is successful!"
+						                        + " Receipt id is " + receiptId + "\n");
+						// close the window
+						dispose();
+						return;
+					} else {
+						mainGui.updateStatusBar("Purchase operation is failed!\n");
+						popUpErrorMessage("Failed to process this purchase!");
+					}
+					
+				}
 			});
 			
 			
@@ -843,42 +996,11 @@ public class CustomerController implements ActionListener, ExceptionListener {
 		
 		
 		
-		// when checkout button is pressed, insert the purchase into database
+		
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			// TODO Auto-generated method stub
-			int receiptId = customerModel.getNextReceiptID();
-			ArrayList<Integer> upcList = new ArrayList<Integer>();
-			ArrayList<Integer> quantityList = new ArrayList<Integer>();
-			for (int upc:shoppingCart.keySet()) {
-				if (shoppingCart.get(upc)>0) {
-					upcList.add(upc);
-					quantityList.add(shoppingCart.get(upc));
-				}
-			}
-			String dateString = getCurrentDate("yyyy-MM-dd") ;
-			String cardNumber = cardNumberField.getText().trim();
-			String expiryDate = expiryDateField.getText().trim();
-			String expectedDateString = customerModel.getExpectedDeliveryDate();
-			System.out.println("Date:" + expectedDateString); // for test
-			String deliveredDateString = null;
-			
-			if (
-				customerModel.processPurchase(receiptId, dateString, cid,
-                            cardNumber, expiryDate, 
-                            expectedDateString, deliveredDateString, 
-                            upcList, quantityList) == true 
-                ) {
-				
-				popUpOKMessage("The purchase is successful!");
-				mainGui.updateStatusBar("Purchase operation is successful!"
-				                        + " Receipt id is " + receiptId + "\n");
-				// close the window
-				dispose();
-			} else {
-				mainGui.updateStatusBar("Purchase operation is failed!\n");
-				popUpErrorMessage("Failed to process this purchase!");
-			}
+
 		}
 		
 	}

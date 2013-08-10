@@ -10,6 +10,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -37,6 +38,7 @@ public class DialogHelper {
 	int rowCount2;
 	int rowCount3;
 	int rowCount4;
+	int rowCount5;
 
 
 	public DialogHelper() {
@@ -47,6 +49,7 @@ public class DialogHelper {
 		rowCount2 = 0;
 		rowCount3 = 0;
 		rowCount4 = 0;
+		rowCount5 = 0;
 	}
 	
 
@@ -88,6 +91,33 @@ public class DialogHelper {
 		rowCount3++;
 	}
 	
+	// add a label and its corresponding field as a row to the input panel
+	// the next call will place components right below the last added ones
+	// so that you can use it to add several rows of component pairs (one below the other)
+	public void addComponentsToPanel2(JPanel inputPanel, String label, JComponent component) {
+		
+		inputPanel.setLayout(gb);
+		
+		// create and place label component
+		JLabel jLabel1= new JLabel(label + ": ", SwingConstants.RIGHT);	    
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 0;
+		c.gridy = rowCount5;
+		c.insets = new Insets(0, 0, 0, 5);
+		c.anchor = GridBagConstraints.EAST;
+		gb.setConstraints(jLabel1, c);
+		inputPanel.add(jLabel1);
+
+		// place field1 component
+		c.gridx = 1;
+		c.gridy = rowCount5;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(0, 0, 0, 30);
+		gb.setConstraints(component, c);
+		inputPanel.add(component);
+		
+		rowCount5++;
+	}
 
 	// add the item upc and quantity fields to the inputPanel 
 	public void addComponentsToPanel(JPanel inputPanel, String itemUPC1, 

@@ -14,6 +14,7 @@ import view.ShopGUI;
 
 
 import java.util.Date;
+import java.util.HashMap;
 import java.sql.*;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -445,6 +446,7 @@ public class ClerkController implements ActionListener, ExceptionListener {
 		private ArrayList<Double> priceList = new ArrayList<Double>();
 		private ArrayList<Integer> purchaseQuantityList = null;
 		private ArrayList<Integer> returnQuantityList = null;
+		private HashMap<JTextField, Double> quantityFieldPrice = new HashMap<JTextField, Double>(); 
 		
 		
 		public ProcessReturnDialog(ShopGUI mainGUI) {
@@ -566,6 +568,8 @@ public class ClerkController implements ActionListener, ExceptionListener {
 									oneRow.add(priceString);
 									rowList.add(oneRow);
 								}
+								// clean the mapping;
+								quantityFieldPrice.clear();
 								
 								// create the corresponding checkbox and text field for each row
 								for (int i=0; i<rowList.size(); ++i) {
@@ -574,6 +578,8 @@ public class ClerkController implements ActionListener, ExceptionListener {
 									returnQuantityField.addFocusListener(new UnSelectCheckBox(confirmReturn));
 									
 									returnQuantityFieldList.add(returnQuantityField);
+									// associated the returnQuantityField with its price
+									quantityFieldPrice.put(returnQuantityField, priceList.get(i));
 									
 								}
 								
@@ -634,8 +640,8 @@ public class ClerkController implements ActionListener, ExceptionListener {
 			
 			see.addItemListener(showReceiptContents);
 
-			
-
+			// 
+			//confirmReturn.addItemListener(showReceiptContents);
 			
 			// when the see checkbox is unselected, disable the return quantity box
 			// and the confirm return checkbox
@@ -696,7 +702,13 @@ public class ClerkController implements ActionListener, ExceptionListener {
 										    "for item with upc = " + upcList.get(i));
 								returnQuantityFieldList.get(i).setText("");
 							} else {
-								refund += returnQuantityList.get(i)*priceList.get(i);
+								//refund += returnQuantityList.get(i)*priceList.get(i);
+							}
+						}
+						for (JTextField field:returnQuantityFieldList) {
+							if (field.getText().trim().length()!=0) {
+								int quantity = Integer.parseInt(field.getText().trim());
+								refund += quantity*quantityFieldPrice.get(field);
 							}
 						}
 						String summary = "The refund is " + 
@@ -753,13 +765,20 @@ public class ClerkController implements ActionListener, ExceptionListener {
 						popUpOKMessage("The return is successful!");
 						mainGui.updateStatusBar("The return is successful!");
 						receiptIdField.setText("");
-						see.setSelected(false);
+						see.setSelected(false);	
+						OKButton.setEnabled(false);
+						confirmReturn.setSelected(false);
 						pack();
+
+						// close the window to avoid problems
+						
 					} else {
 						popUpErrorMessage("The return is failed!");
 						mainGui.updateStatusBar("The return is failed!");
 						receiptIdField.setText("");
 						see.setSelected(false);
+						OKButton.setEnabled(false);
+						confirmReturn.setSelected(false);
 						pack();
 					}
 					

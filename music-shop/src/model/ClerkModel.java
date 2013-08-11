@@ -168,6 +168,15 @@ public class ClerkModel {
 			// delete those purchaseItems whose quantity = 0
 			Statement stmt = con.createStatement();
 			stmt.executeUpdate("delete from purchaseItem where quantity = 0 ");
+			//update the stock quantity of items
+			ps = con.prepareStatement("update item set stock=stock+?" +
+					" where upc = ?");
+			for (int i=0; i<upcList.size(); ++i) {
+				ps.setInt(1, returnQuantityList.get(i));
+				ps.setInt(2, upcList.get(i));
+				ps.executeUpdate();
+			}
+			
 			con.commit();
 			return true;
 		} catch (SQLException ex) {

@@ -417,7 +417,7 @@ public class CustomerController implements ActionListener, ExceptionListener {
 		
 		public GoShoppingDialog(ShopGUI mainGUI) {
 			// TODO Auto-generated constructor stub
-			super(mainGUI, "Customer registration", true);
+			super(mainGUI, "Online shopping", true);
 			//setResizable(false);
 			// for formating the floats
 			final NumberFormat numberFormatter = NumberFormat.getNumberInstance();

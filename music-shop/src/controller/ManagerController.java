@@ -749,9 +749,64 @@ public class ManagerController implements ActionListener, ExceptionListener {
 	 *
 	 */
 	class ShowTopSellingItemsDialog extends JDialog implements ActionListener {
-
+		JTextField dateField = new JTextField(10);
+		JTextField topNField = new JTextField(4);
+		JCheckBox showTopItems = new JCheckBox("show top selling items");
+		
 		public ShowTopSellingItemsDialog(ShopGUI shopGUI) {
-			// TODO
+			super(shopGUI, "Show top selling items", true);
+			//setResizable(false);	
+			//setSize(500, 500);
+			JPanel contentPane = new JPanel(new BorderLayout());
+			setContentPane(contentPane);			
+			contentPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+			DialogHelper dialogHelper = new DialogHelper();
+			JPanel datePane = dialogHelper.createInputPane("");
+			dialogHelper.addComponentsToPanel(datePane, "Enter date (yyyy-mm-dd)", 
+					                   dateField, "Top nth", topNField, showTopItems);
+			
+			final JPanel reportPane = dialogHelper.createInputPane("");
+			
+
+			
+			contentPane.add(datePane,BorderLayout.NORTH);
+			contentPane.add(reportPane,BorderLayout.CENTER);
+			
+			// when the checkbox is selected, check the date input and generate the report
+			showTopItems.addItemListener(new ItemListener() {
+				
+				@Override
+				public void itemStateChanged(ItemEvent e) {
+					// TODO Auto-generated method stub
+					if (showTopItems.isSelected()) {
+						if (dateField.getText().trim().length()==0) {
+							popUpErrorMessage("Date can't be empty!");
+							showTopItems.setSelected(false);
+						} else if (topNField.getText().trim().length()==0) {
+							popUpErrorMessage("Top nth field can't be empty!");
+							showTopItems.setSelected(false);
+						} else { // we assume the date is in good format
+							String date = dateField.getText().trim();
+							int topN = Integer.parseInt(topNField.getText().trim());
+							ArrayList< ArrayList<String> > table = managerModel.getTopSellingItems(date, topN);
+							String[] columnLabels = {"  ", "Title", "Company", "Stock quantity",
+					                 "Sold copies"};
+							DialogHelper dialogHelper = new DialogHelper();
+							dialogHelper.addOneTableToPanel(reportPane, columnLabels, table);
+							dateField.setEnabled(false);
+							topNField.setEnabled(false);
+							pack();
+						}
+					} else {
+						dateField.setEnabled(true);
+						topNField.setEnabled(true);
+						reportPane.removeAll();
+						pack();
+					}
+					
+				}
+			});
+			
 		}
 		
 		@Override

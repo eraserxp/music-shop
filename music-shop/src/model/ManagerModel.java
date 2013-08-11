@@ -466,8 +466,56 @@ public class ManagerModel {
 		return numberFormatter.format(number);
 	}
 	
-	public boolean showTopSellingItems() {
-		return false;
+	
+	
+	public ArrayList< ArrayList<String> > getTopSellingItems(String date, int topN) {
+		ArrayList< ArrayList<String> > rowList = new ArrayList< ArrayList<String> >();
+		ResultSet rs = null;
+
+		try {
+			ps = con.prepareStatement(
+					"select I.title, I.company, I.stock, sum(PI.quantity) as sale_quantity"
+							+ " from Item I, PurchaseItem PI "
+							+ " where I.upc = PI.upc and PI.receiptId in "
+							+ " (select receiptId from Purchase P where P.pdate = ?)"
+							+ " group by I.upc, I.title, I.company, I.stock"
+							+ " order by sum(PI.quantity) desc " 
+					); 				
+			java.sql.Date purchaseDate = convertStringToDate(date, "yyyy-MM-dd");
+			ps.setDate(1, purchaseDate);
+			rs = ps.executeQuery();
+			int counter = 1;
+			while (rs.next() && counter <= topN) {
+				ArrayList<String> oneRow = new ArrayList<String>();
+				oneRow.add(Integer.toString(counter));
+				counter += 1;
+
+				String title =  rs.getString(1);
+				oneRow.add(title);
+
+				String company =  rs.getString(2);
+				oneRow.add(company);
+
+				int stock = rs.getInt(3);
+				oneRow.add(Integer.toString(stock));
+
+				int soldCopies = rs.getInt("sale_quantity");
+				oneRow.add(Integer.toString(soldCopies) );
+
+				rowList.add(oneRow);
+
+			}
+
+		} catch (SQLException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+			// no need to commit or rollback since it is only a query
+		} finally {
+			try { rs.close(); } catch (Exception ignore) { }
+		}
+		
+		return rowList;
+		
 		
 	}
 	

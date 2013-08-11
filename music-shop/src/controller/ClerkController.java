@@ -655,11 +655,23 @@ public class ClerkController implements ActionListener, ExceptionListener {
 							returnQuantityFieldList.get(i).setEnabled(false);
 						}
 						confirmReturn.setEnabled(false);
+						// enable the receiptId field
+						receiptIdField.setEnabled(true);
+
 					} else {
 						for (int i=0; i<returnQuantityFieldList.size(); ++i) {
 							returnQuantityFieldList.get(i).setEnabled(true);
 						}
 						confirmReturn.setEnabled(true);
+
+						if (receiptIdField.getText().trim().length()==0) {
+							popUpErrorMessage("Receipt id is empty!");
+							// unselect the checkbox
+							see.setSelected(false);
+						} else {
+							// disable the receiptId field
+							receiptIdField.setEnabled(false);
+						}
 					}
 				}
 			});
@@ -694,17 +706,44 @@ public class ClerkController implements ActionListener, ExceptionListener {
 					JCheckBox cb = (JCheckBox) ie.getSource();
 					double refund = 0.0;
 					if (cb.isSelected()) {
-						returnQuantityList = obtainListFromFields(returnQuantityFieldList);						
-						for (int i=0; i<returnQuantityList.size(); ++i) {
+						returnQuantityList = obtainListFromFields(returnQuantityFieldList);
+						// check to see if all quantity are zero
+						if (returnQuantityList.size()==0) {
+							popUpErrorMessage("All return quantities are empty ");
+							OKButton.setEnabled(false);
+							return;
+						}
+						
+//						for (int i=0; i<returnQuantityList.size(); ++i) {
+//							// check if the return quantity is valid
+//							if (returnQuantityList.get(i)> purchaseQuantityList.get(i)) {
+//								popUpErrorMessage("The return quantity is not valid " +
+//										    "for item with upc = " + upcList.get(i));
+//								returnQuantityFieldList.get(i).setText("");
+//								OKButton.setEnabled(false);
+//								//return;
+//							} else {
+//								//refund += returnQuantityList.get(i)*priceList.get(i);
+//							}
+//						}
+						
+						for (int i=0; i<returnQuantityFieldList.size(); ++i) {
 							// check if the return quantity is valid
-							if (returnQuantityList.get(i)> purchaseQuantityList.get(i)) {
-								popUpErrorMessage("The return quantity is not valid " +
+							JTextField field = returnQuantityFieldList.get(i);
+							int returnQuantity;
+							if (field.getText().trim().length()!=0) {
+								returnQuantity = Integer.parseInt(field.getText().trim());
+								if (returnQuantity<=0 || 
+									returnQuantity>purchaseQuantityList.get(i)) {
+									popUpErrorMessage("The return quantity is not valid " +
 										    "for item with upc = " + upcList.get(i));
-								returnQuantityFieldList.get(i).setText("");
-							} else {
-								//refund += returnQuantityList.get(i)*priceList.get(i);
+									returnQuantityFieldList.get(i).setText("");
+									OKButton.setEnabled(false);
+								}
 							}
 						}
+						
+						// calculate the refund
 						for (JTextField field:returnQuantityFieldList) {
 							if (field.getText().trim().length()!=0) {
 								int quantity = Integer.parseInt(field.getText().trim());

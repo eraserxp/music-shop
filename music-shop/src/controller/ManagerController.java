@@ -683,9 +683,57 @@ public class ManagerController implements ActionListener, ExceptionListener {
 	 *
 	 */
 	class GenerateDailyReportDialog extends JDialog implements ActionListener {
-
+		JTextField dateField = new JTextField(10); 
+		JCheckBox showReport = new JCheckBox("show daily report");
+		
 		public GenerateDailyReportDialog(ShopGUI shopGUI) {
-			// TODO
+			super(shopGUI, "Generate daily sales report", true);
+			//setResizable(false);	
+			//setSize(500, 500);
+			JPanel contentPane = new JPanel(new BorderLayout());
+			setContentPane(contentPane);			
+			contentPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+			DialogHelper dialogHelper = new DialogHelper();
+			JPanel datePane = dialogHelper.createInputPane("");
+			dialogHelper.addComponentsToPanel(datePane, "Enter date (yyyy-mm-dd)", dateField, showReport);
+			
+			final JPanel reportPane = dialogHelper.createInputPane("");
+			
+
+			
+			contentPane.add(datePane,BorderLayout.NORTH);
+			contentPane.add(reportPane,BorderLayout.CENTER);
+			
+			// when the show daily report checkbox is selected, check the date input and generate the report
+			showReport.addItemListener(new ItemListener() {
+				
+				@Override
+				public void itemStateChanged(ItemEvent e) {
+					// TODO Auto-generated method stub
+					if (showReport.isSelected()) {
+						if (dateField.getText().trim().length()==0) {
+							popUpErrorMessage("Date can't be empty!");
+							showReport.setSelected(false);
+						} else { // we assume the date is in good format
+							String date = dateField.getText().trim();
+							ArrayList< ArrayList<String> > table = managerModel.getDailyReport(date);
+							String[] columnLabels = {"UPC", "Category", "Unit Price", "Units",
+					                 "Total Value"};
+							DialogHelper dialogHelper = new DialogHelper();
+							dialogHelper.addOneTableToPanel(reportPane, columnLabels, table);
+							dateField.setEnabled(false);
+							pack();
+						}
+					} else {
+						dateField.setEnabled(true);
+						reportPane.removeAll();
+						pack();
+					}
+					
+				}
+			});
+
+			
 		}
 		
 		@Override

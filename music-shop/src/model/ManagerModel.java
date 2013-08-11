@@ -3,6 +3,7 @@ import subject_observer.*;
 
 
 import java.sql.*; 
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -306,10 +307,163 @@ public class ManagerModel {
 		return null;
 	}
 	
+	// get the categories of the purchase items for a date
+	public ArrayList<String> getPurchaseCategories(String date) {
+		int count = 0;
+		ArrayList<String> categoryList = new ArrayList<String>();
+		ResultSet rs = null;
+		try {
+			ps = con.prepareStatement(
+					"select distinct category from purchase P, Item I, PurchaseItem PI " +
+					" where P.pdate = ? and P.receiptId=PI.receiptId and I.upc = PI.upc "
+					); 
+			java.sql.Date purchaseDate = convertStringToDate(date, "yyyy-MM-dd");
+			ps.setDate(1, purchaseDate);
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				String category =  rs.getString(1);
+				categoryList.add(category);
+			}
+			
+		} catch (SQLException ex) {
+			ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+			fireExceptionGenerated(event);
+			// no need to commit or rollback since it is only a query
+		} finally {
+	        try { rs.close(); } catch (Exception ignore) { }
+	    }
+		return categoryList;
+	}
 	
-	public boolean generateDailyReport() {
-		return false;
+	// get the daily report
+	public ArrayList< ArrayList<String> > getDailyReport(String date) {
+		ArrayList< ArrayList<String> > rowList = new ArrayList< ArrayList<String> >();
+		int totalQuantity = 0;
+		double totalAmount = 0.0;
+		ArrayList<String> categoryList = getPurchaseCategories(date);
+		ResultSet rs = null;
+		for (String category: categoryList) {
+			try {
+				ps = con.prepareStatement(
+						"select I.upc, price, sum(quantity) as units, " +
+						" price*sum(quantity) as total_value " + 
+                        " from Item I, PurchaseItem PI " + 
+                        " where I.upc = PI.upc and I.category = ? " +
+                        " and PI.receiptId in " +
+                        "( select receiptId from Purchase P where P.pdate=? ) " +
+                        " group by I.upc, I.category, I.price" 
+						); 
+
+				ps.setString(1, category);				
+				java.sql.Date purchaseDate = convertStringToDate(date, "yyyy-MM-dd");
+				ps.setDate(2, purchaseDate);
+				rs = ps.executeQuery();
+				ArrayList<Integer> unitsList = new ArrayList<Integer>();
+				ArrayList<Double> subtotalList = new ArrayList<Double>();
+				while (rs.next()) {
+					ArrayList<String> oneRow = new ArrayList<String>();
+					int upc =  rs.getInt(1);
+					String upcString = Integer.toString(upc);
+					oneRow.add(upcString);
+					oneRow.add(category);
+					double price = rs.getDouble(2);
+					oneRow.add(formatDouble(price, 2));
+					int units = rs.getInt(3);
+					unitsList.add(units);
+					//total += total + units;
+					oneRow.add(Integer.toString(units));
+					double subtotal = rs.getDouble(4);
+					subtotalList.add(subtotal);
+					oneRow.add(formatDouble(subtotal, 2));
+					rowList.add(oneRow);
+
+				}
+				// add summary for one category
+				ArrayList<String> oneRow = new ArrayList<String>();
+				// add a blank line 
+				oneRow.add("   ");
+				oneRow.add("   ");
+				oneRow.add("   ");
+				oneRow.add("   ");
+				oneRow.add("   ");
+				rowList.add(oneRow);
+				
+				oneRow = new ArrayList<String>();
+				oneRow.add("    ");
+				oneRow.add("Total");
+				oneRow.add("     ");
+				int unitsForOneCategory = sumIntegers(unitsList);
+				totalQuantity += totalQuantity + unitsForOneCategory;
+				oneRow.add(Integer.toString(unitsForOneCategory));
+				double subtotalForOneCategory = sumDoubles(subtotalList);
+				totalAmount += totalAmount + subtotalForOneCategory; 
+				oneRow.add(formatDouble(subtotalForOneCategory, 2));
+				rowList.add(oneRow);
+				
+				// add another blank line 
+				oneRow = new ArrayList<String>();					
+				oneRow.add("   ");
+				oneRow.add("   ");
+				oneRow.add("   ");
+				oneRow.add("   ");
+				oneRow.add("   ");
+				rowList.add(oneRow);
+				
+				
+			} catch (SQLException ex) {
+				ExceptionEvent event = new ExceptionEvent(this, ex.getMessage());
+				fireExceptionGenerated(event);
+				// no need to commit or rollback since it is only a query
+			} finally {
+		        try { rs.close(); } catch (Exception ignore) { }
+		    }
+		}// end of for loop
+		// add the final summary
+		ArrayList<String> oneRow = new ArrayList<String>();
+		oneRow.add("   ");
+		oneRow.add("   ");
+		oneRow.add("   ");
+		oneRow.add("   ");
+		oneRow.add("-----------");
+		rowList.add(oneRow);
+		oneRow = new ArrayList<String>();
+		oneRow.add("   ");
+		oneRow.add("Total Daily sales");
+		oneRow.add("   ");
+		oneRow.add(Integer.toString(totalQuantity));
+		oneRow.add(formatDouble(totalAmount, 2));
+		rowList.add(oneRow);
 		
+		return rowList;
+		
+	}
+
+	
+	
+	// calculate the sum of a list of integers 
+	private int sumIntegers(ArrayList<Integer> integerList) {
+		int sum = 0;
+		for (Integer i: integerList) {
+			sum += i;
+		}
+		return sum;
+	}
+	
+	// calculate the sum of a list of doubles and return the result as a string (with 2 decimal digits)
+	private double sumDoubles(ArrayList<Double> doubleList) {
+		double sum = 0.0;		
+		for (Double i: doubleList) {
+			sum += i;
+		}
+		return sum;
+	}
+	
+	// return the string corresponding to a double in a format with ndigits after decimal points
+	private String formatDouble(double number, int ndigit) {
+		NumberFormat numberFormatter = NumberFormat.getNumberInstance();
+		numberFormatter.setMinimumFractionDigits(ndigit);
+		numberFormatter.setMaximumFractionDigits(ndigit);
+		return numberFormatter.format(number);
 	}
 	
 	public boolean showTopSellingItems() {
